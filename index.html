@@ -469,6 +469,55 @@
       pointer-events: none;
     }
     .theme-toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+    /* ── Reply quote inside bubble ──────────────────────────────── */
+    .reply-quote {
+      background: rgba(0,0,0,.14);
+      border-left: 3px solid var(--accent);
+      border-radius: 4px;
+      padding: 4px 7px;
+      margin-bottom: 5px;
+      max-width: 100%;
+      overflow: hidden;
+    }
+    body.light .reply-quote { background: rgba(0,0,0,.06); }
+    .reply-quote-name { font-size: 9px; font-weight: 700; margin-bottom: 1px; }
+    .reply-quote-text { font-size: 9.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* ── Aspect-ratio controls ───────────────────────────────────── */
+    .ar-row { display: flex; align-items: center; gap: 4px; }
+    .ar-btn {
+      padding: 3px 9px; border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--border); color: var(--muted);
+      font-size: 10px; cursor: pointer;
+      transition: background .2s, color .2s, border-color .2s;
+    }
+    .ar-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    /* ── Phone shape variants ────────────────────────────────────── */
+    .phone-wrap[data-ar="square"] .phone-frame {
+      width: 302px; height: 302px; border-radius: 30px;
+    }
+    .phone-wrap[data-ar="square"] .phone-frame .phone-screen { border-radius: 22px; }
+    .phone-wrap[data-ar="landscape"] .phone-frame {
+      width: 580px; height: 320px; border-radius: 30px;
+    }
+    .phone-wrap[data-ar="landscape"] .phone-frame .phone-screen { border-radius: 22px; }
+    .phone-wrap[data-ar="landscape"] .phone-frame .dynamic-island { width: 90px; height: 24px; top: 8px; }
+    .phone-wrap[data-ar="landscape"] .phone-frame .status-bar { height: 36px; }
+    .phone-wrap[data-ar="landscape"]::before,
+    .phone-wrap[data-ar="landscape"]::after { display: none; }
+    .phone-wrap[data-ar="landscape"] .bubble { max-width: 380px; }
+
+    /* ── Recording indicator ─────────────────────────────────────── */
+    .rec-dot {
+      display: inline-block; width: 8px; height: 8px;
+      background: #e53935; border-radius: 50%;
+      margin-left: 4px; vertical-align: middle;
+      animation: recBlink 1s infinite;
+    }
+    @keyframes recBlink { 50% { opacity: 0; } }
   </style>
 </head>
 <body>
@@ -488,11 +537,25 @@
 
       <div class="fmt-guide">
         <strong>Format guide:</strong><br>
-        <code># GROUP: name</code>&nbsp; group title &nbsp;
-        <code># ME: Name</code>&nbsp; your name (right side)<br>
+        <code># GROUP: name</code>&nbsp;group title &nbsp;
+        <code># ME: Name</code>&nbsp;your name (right side)<br>
+        <code># MEMBERS: A,B,C</code>&nbsp;member list<br>
         <code>[HH:MM] Name: message</code>&nbsp;—&nbsp;chat bubble<br>
+        <code>[HH:MM] Name: &gt;&gt;Q.Name: quoted | reply text</code>&nbsp;—&nbsp;reply<br>
         <code>&gt; Bob:😂 Sarah:💀</code>&nbsp;—&nbsp;reactions (name:emoji)<br>
-        <code>[system] text</code>&nbsp;—&nbsp;system event
+        <code>[system] text</code>&nbsp;—&nbsp;system event<br>
+        <em>System examples:</em>&nbsp;
+        <code>[system] Dave created this group</code>&nbsp;
+        <code>[system] Alice added Bob</code>&nbsp;
+        <code>[system] Bob left</code>&nbsp;
+        <code>[system] Dave removed Charlie</code>&nbsp;
+        <code>[system] Alice pinned a message</code>&nbsp;
+        <code>[system] Bob deleted a message</code>&nbsp;
+        <code>[system] Dave changed the group icon</code>&nbsp;
+        <code>[system] Alice changed the group subject to "Name"</code>&nbsp;
+        <code>[system] Bob changed the group description to "..."</code>&nbsp;
+        <code>[system] Charlie changed the group theme</code>&nbsp;
+        <code>[system] Alice made Bob an admin</code>
       </div>
 
       <textarea id="chat-input" spellcheck="false"></textarea>
@@ -510,6 +573,10 @@
         <div class="dl-card">
           <button class="dl-btn" onclick="downloadTXT()">📄 Download TXT</button>
           <div class="size-info" id="txt-size">—</div>
+        </div>
+        <div class="dl-card">
+          <button class="dl-btn" id="rec-btn" onclick="toggleVideoRecord()">🎬 Record Video</button>
+          <div class="size-info" id="video-size">WebM · auto-stops</div>
         </div>
       </div>
 
@@ -530,6 +597,11 @@
         <span>Speed</span>
         <input type="range" id="spd-slider" min="1" max="5" value="3" oninput="setSpeed(this.value)">
         <span id="spd-label">1×</span>
+      </div>
+      <div class="ar-row">
+        <button class="ar-btn active" id="ar-portrait"  onclick="setAspect('portrait')"  title="Portrait"  aria-label="Portrait mode">📱</button>
+        <button class="ar-btn"        id="ar-square"    onclick="setAspect('square')"    title="Square"    aria-label="Square mode">⊡</button>
+        <button class="ar-btn"        id="ar-landscape" onclick="setAspect('landscape')" title="Landscape" aria-label="Landscape mode">🖥</button>
       </div>
     </div>
 
@@ -616,7 +688,7 @@ const SAMPLE = `# GROUP: Breaking News Commentators 🌍🔥
 > Bob:😂 Sarah:😂 Dave:💀 Emma:😂
 [system] Dave changed the group photo
 [09:02] Dave: I changed it to a photo of the sun. felt right.
-[09:02] Sarah: peak group management ngl
+[09:02] Sarah: >>Dave: I changed it to a photo of the sun. felt right. | peak group management ngl
 [09:02] Emma: 11/10 no notes
 > Alice:👏 Bob:👏 Charlie:👏 Sarah:😂
 [system] Dave changed the group subject to "The Sun HR Department ☀️"
@@ -631,7 +703,7 @@ const SAMPLE = `# GROUP: Breaking News Commentators 🌍🔥
 [09:05] Dave: Emma couldn't handle the truth 😂
 [system] Alice added Emma
 [09:05] Emma: MY WIFI DIED I WAS NOT LEAVING
-[09:05] Bob: sure Jan
+[09:05] Bob: >>Emma: MY WIFI DIED I WAS NOT LEAVING | sure Jan
 > Alice:😂 Charlie:😂 Sarah:😂 Dave:😂 Emma:👀
 [09:06] Charlie: anyway AI took my job today so that's fun
 [09:06] Alice: wait WHAT
@@ -649,7 +721,7 @@ const SAMPLE = `# GROUP: Breaking News Commentators 🌍🔥
 > Alice:😂 Sarah:😂 Charlie:😂 Dave:💀 Emma:👍
 [system] Charlie changed the group theme
 [09:09] Charlie: changed the theme to "robot uprising" 🤖 seemed fitting
-[09:09] Sarah: Charlie there is no robot uprising theme
+[09:09] Sarah: >>Charlie: changed the theme to "robot uprising" 🤖 seemed fitting | Charlie there is no robot uprising theme
 [09:09] Charlie: there is now
 > Alice:😂 Dave:😂 Emma:👀
 [system] Dave removed Charlie
@@ -661,7 +733,7 @@ const SAMPLE = `# GROUP: Breaking News Commentators 🌍🔥
 [09:10] Bob: your lawyer is also an AI bro
 > Alice:😂 Sarah:😂 Dave:😂 Emma:💀 Charlie:💀
 [09:11] Alice: FINAL STORY: climate scientists say we have 12 years
-[09:11] Emma: they said 12 years in 2006 💀
+[09:11] Emma: >>Alice: FINAL STORY: climate scientists say we have 12 years | they said 12 years in 2006 💀
 [09:11] Sarah: it auto-renews like a Netflix subscription
 [09:12] Dave: and you can't cancel without talking to retention
 > Alice:😂 Bob:😂 Charlie:😂 Emma:😭 Sarah:💀
@@ -669,6 +741,7 @@ const SAMPLE = `# GROUP: Breaking News Commentators 🌍🔥
 [09:12] Charlie: and I'm an AI so I'll outlive all of you anyway 🤖
 > Alice:😂 Bob:🤖 Emma:😂 Dave:😂
 [system] Alice changed the group description to "saving the world one meme at a time 🌍"
+[system] Alice made Bob an admin
 [09:13] Alice: that's your news for today folks 👏
 [09:13] Bob: 0% informed, 100% entertained
 [09:13] Sarah: CNN could never
@@ -714,9 +787,14 @@ function parseChat(text) {
     // Chat message  [HH:MM] Name: text
     const m = line.match(/^\[(\d{1,2}:\d{2}(?:\s*[AaPp][Mm])?)\]\s+(.+?):\s*([\s\S]*)$/);
     if (m) {
+      const raw_text = m[3];
+      // Reply format: >>QuotedSender: quoted text | actual reply
+      const replyMatch = raw_text.match(/^>>\s*(.+?):\s*(.*?)\s*\|\s*([\s\S]*)$/);
       items.push({
         type: 'message', time: m[1],
-        sender: m[2].trim(), text: m[3],
+        sender: m[2].trim(),
+        text: replyMatch ? replyMatch[3].trim() : raw_text,
+        replyTo: replyMatch ? { sender: replyMatch[1].trim(), text: replyMatch[2].trim() } : null,
         reactions: []
       });
     }
@@ -835,6 +913,22 @@ function buildMessageNode(item, me) {
 
   const bubble = document.createElement('div');
   bubble.className = 'bubble ' + (isMe ? 'me' : 'other');
+
+  // Reply quote box
+  if (item.replyTo) {
+    const q  = document.createElement('div');
+    q.className = 'reply-quote';
+    const qn = document.createElement('div');
+    qn.className = 'reply-quote-name';
+    qn.textContent = item.replyTo.sender;
+    qn.style.color = memberColor(item.replyTo.sender);
+    const qt = document.createElement('div');
+    qt.className = 'reply-quote-text';
+    qt.textContent = item.replyTo.text;
+    q.appendChild(qn);
+    q.appendChild(qt);
+    bubble.appendChild(q);
+  }
 
   const txt = document.createElement('span');
   txt.textContent = item.text;
@@ -1115,6 +1209,101 @@ function updateTxtSize(raw) {
   const bytes = new TextEncoder().encode(raw).length;
   document.getElementById('txt-size').textContent =
     (bytes / 1024).toFixed(1) + ' KB  (' + bytes.toLocaleString() + ' bytes)';
+}
+
+/* ================================================================
+   ASPECT RATIO
+================================================================ */
+function setAspect(ar) {
+  document.querySelector('.phone-wrap').dataset.ar = ar;
+  ['portrait', 'square', 'landscape'].forEach(id => {
+    document.getElementById('ar-' + id).classList.toggle('active', id === ar);
+  });
+}
+
+/* ================================================================
+   VIDEO RECORDING  (MediaRecorder + html2canvas, ~12 fps, WebM)
+================================================================ */
+let isRecording = false;
+let recChunks   = [];
+let recRecorder = null;
+let recCanvas   = null;
+let recInterval = null;
+let recAutoStop = null;
+
+async function toggleVideoRecord() {
+  if (isRecording) { stopVideoRecord(); return; }
+  if (!parsedData) { generateChat(); }
+  if (typeof html2canvas === 'undefined') {
+    alert('html2canvas library failed to load. Please refresh the page or check the console for errors.'); return;
+  }
+  if (typeof MediaRecorder === 'undefined') {
+    alert('MediaRecorder API is not supported in this browser.'); return;
+  }
+
+  const phoneFrame = document.getElementById('phone-frame');
+  const scale = 2;
+  recCanvas        = document.createElement('canvas');
+  recCanvas.width  = phoneFrame.offsetWidth  * scale;
+  recCanvas.height = phoneFrame.offsetHeight * scale;
+  const ctx = recCanvas.getContext('2d');
+
+  const fps      = 12;
+  const stream   = recCanvas.captureStream(fps);
+  const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+    ? 'video/webm;codecs=vp9' : 'video/webm';
+
+  recChunks   = [];
+  recRecorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 3000000 });
+  recRecorder.ondataavailable = e => { if (e.data.size > 0) recChunks.push(e.data); };
+  recRecorder.onstop = () => {
+    const blob = new Blob(recChunks, { type: 'video/webm' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = 'whatsapp-chat.webm';
+    a.click(); URL.revokeObjectURL(url);
+    document.getElementById('video-size').textContent =
+      (blob.size / 1024).toFixed(0) + ' KB · WebM';
+  };
+
+  recRecorder.start(200);
+  isRecording = true;
+  const btn = document.getElementById('rec-btn');
+  btn.innerHTML = '⏹ Stop & Save <span class="rec-dot"></span>';
+
+  // Capture frames
+  const captureFrame = async () => {
+    if (!isRecording) return;
+    try {
+      const img = await html2canvas(phoneFrame, {
+        backgroundColor: null, scale, useCORS: true, logging: false, allowTaint: true
+      });
+      ctx.clearRect(0, 0, recCanvas.width, recCanvas.height);
+      ctx.drawImage(img, 0, 0);
+    } catch (err) { console.warn('Frame capture failed:', err); }
+  };
+  recInterval = setInterval(captureFrame, Math.round(1000 / fps));
+
+  // Restart playback
+  restart();
+  setTimeout(() => { if (!playing) togglePlay(); }, 150);
+
+  // Auto-stop when animation finishes
+  recAutoStop = setInterval(() => {
+    if (!playing && curIdx >= allSteps.length && allSteps.length > 0) {
+      clearInterval(recAutoStop);
+      setTimeout(stopVideoRecord, 800);
+    }
+  }, 500);
+}
+
+function stopVideoRecord() {
+  if (!isRecording) return;
+  isRecording = false;
+  clearInterval(recInterval);
+  clearInterval(recAutoStop);
+  if (recRecorder && recRecorder.state !== 'inactive') recRecorder.stop();
+  document.getElementById('rec-btn').textContent = '🎬 Record Video';
 }
 
 /* ================================================================
