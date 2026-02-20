@@ -7,425 +7,468 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    /* ── CSS Custom Properties (dark = default) ──────────────────── */
+    :root {
+      --app-bg:        #111b21;
+      --panel-bg:      #202c33;
+      --border:        #2a3942;
+      --text:          #e9edef;
+      --muted:         #8696a0;
+      --accent:        #00a884;
+      --accent-h:      #008f72;
+      /* phone shell */
+      --phone-outer:   #1c1c1e;
+      --phone-rim:     #3a3a3c;
+      /* WhatsApp dark */
+      --wa-hdr:        #1f2c34;
+      --chat-bg:       #0b141a;
+      --bubble-me:     #005c4b;
+      --bubble-other:  #202c33;
+      --input-bar:     #1f2c34;
+      --input-field:   #2a3942;
+      --sys-bg:        rgba(11,20,26,.88);
+      --sys-text:      #8696a0;
+      --tick:          #53bdeb;
+      --react-bg:      #202c33;
+      --react-border:  #2a3942;
+      --react-name:    #8696a0;
+      --txt-bubble:    #e9edef;
+    }
+    body.light {
+      --app-bg:        #f0f2f5;
+      --panel-bg:      #fff;
+      --border:        #d1d7db;
+      --text:          #111b21;
+      --muted:         #667781;
+      /* phone shell */
+      --phone-outer:   #c8c8c8;
+      --phone-rim:     #b0b0b0;
+      /* WhatsApp light */
+      --wa-hdr:        #008069;
+      --chat-bg:       #efeae2;
+      --bubble-me:     #d9fdd3;
+      --bubble-other:  #fff;
+      --input-bar:     #f0f2f5;
+      --input-field:   #fff;
+      --sys-bg:        rgba(220,210,200,.92);
+      --react-bg:      #fff;
+      --react-border:  #e9e9e9;
+      --react-name:    #667781;
+      --txt-bubble:    #111b21;
+    }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #111b21;
-      color: #e9edef;
+      background: var(--app-bg);
+      color: var(--text);
       height: 100vh;
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      transition: background .35s, color .35s;
     }
 
-    /* ── Header ─────────────────────────────────────────────────── */
+    /* ── App header ──────────────────────────────────────────────── */
     header {
-      background: #202c33;
-      padding: 12px 24px;
+      background: var(--panel-bg);
+      padding: 10px 20px;
       display: flex;
       align-items: center;
-      gap: 12px;
-      border-bottom: 1px solid #2a3942;
+      gap: 10px;
+      border-bottom: 1px solid var(--border);
       flex-shrink: 0;
+      transition: background .35s, border-color .35s;
     }
     header .logo {
-      width: 34px; height: 34px;
+      width: 30px; height: 30px;
       background: #25d366;
       border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      font-size: 18px;
+      font-size: 15px; flex-shrink: 0;
     }
-    header h1 { font-size: 17px; font-weight: 600; }
-    header p  { margin-left: auto; font-size: 11px; color: #8696a0; }
+    header h1 { font-size: 15px; font-weight: 600; }
 
-    /* ── Main layout ─────────────────────────────────────────────── */
-    .main {
-      display: flex;
-      flex: 1;
-      overflow: hidden;
+    .theme-btn {
+      margin-left: auto;
+      background: var(--border);
+      border: none;
+      color: var(--text);
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: 11.5px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .2s, color .2s;
     }
+    .theme-btn:hover { background: var(--accent); color: #fff; }
 
-    /* ── Left – editor ───────────────────────────────────────────── */
+    /* ── Main two-panel layout ───────────────────────────────────── */
+    .main { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── Editor panel ────────────────────────────────────────────── */
     .editor-panel {
-      width: 42%;
-      min-width: 320px;
-      background: #111b21;
-      border-right: 1px solid #2a3942;
-      display: flex;
-      flex-direction: column;
+      width: 40%; min-width: 300px;
+      background: var(--app-bg);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      overflow: hidden;
+      transition: background .35s, border-color .35s;
+    }
+    .panel-hdr {
+      background: var(--panel-bg);
+      padding: 8px 14px;
+      font-size: 12px; font-weight: 600;
+      color: var(--accent);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      transition: background .35s, border-color .35s;
+    }
+    .editor-body {
+      flex: 1; display: flex; flex-direction: column;
+      gap: 8px; padding: 8px 10px 10px;
       overflow: hidden;
     }
-
-    .panel-header {
-      background: #202c33;
-      padding: 10px 16px;
-      font-size: 13px;
-      font-weight: 600;
-      color: #00a884;
-      border-bottom: 1px solid #2a3942;
-      flex-shrink: 0;
+    .fmt-guide {
+      background: var(--panel-bg);
+      border-radius: 7px;
+      padding: 7px 10px;
+      font-size: 10.5px; color: var(--muted);
+      line-height: 1.7; flex-shrink: 0;
+      transition: background .35s;
     }
-
-    .editor-content {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      padding: 10px 12px 12px;
-      overflow: hidden;
+    .fmt-guide strong { color: var(--accent); }
+    .fmt-guide code {
+      background: var(--border); padding: 1px 4px;
+      border-radius: 3px; color: var(--text); font-size: 10px;
     }
-
-    .format-guide {
-      background: #202c33;
-      border-radius: 8px;
-      padding: 8px 12px;
-      font-size: 11px;
-      color: #8696a0;
-      line-height: 1.65;
-      flex-shrink: 0;
-    }
-    .format-guide strong { color: #00a884; }
-    .format-guide code {
-      background: #2a3942; padding: 1px 4px; border-radius: 3px;
-      color: #e9edef; font-size: 10.5px;
-    }
-
     textarea#chat-input {
       flex: 1;
-      background: #202c33;
-      border: 1px solid #2a3942;
-      border-radius: 8px;
-      color: #e9edef;
+      background: var(--panel-bg);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      color: var(--text);
       font-family: 'Courier New', Consolas, monospace;
-      font-size: 11.5px;
-      line-height: 1.55;
-      padding: 10px 12px;
-      resize: none;
-      outline: none;
-      min-height: 0;
+      font-size: 11px; line-height: 1.5;
+      padding: 8px 10px;
+      resize: none; outline: none; min-height: 0;
+      transition: background .35s, border-color .2s, color .35s;
     }
-    textarea#chat-input:focus { border-color: #00a884; }
+    textarea#chat-input:focus { border-color: var(--accent); }
 
-    .editor-actions {
-      display: flex;
-      gap: 8px;
-      flex-shrink: 0;
-    }
-
+    .editor-btns { display: flex; gap: 7px; flex-shrink: 0; }
     .btn {
-      padding: 8px 18px;
-      border-radius: 6px;
-      border: none;
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: 600;
-      transition: background 0.2s;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      padding: 7px 14px; border-radius: 6px; border: none;
+      cursor: pointer; font-size: 12px; font-weight: 600;
+      display: flex; align-items: center; gap: 5px;
+      transition: background .2s;
     }
-    .btn-primary  { background: #00a884; color: #fff; flex: 1; justify-content: center; }
-    .btn-primary:hover  { background: #008f72; }
-    .btn-secondary { background: #2a3942; color: #e9edef; }
-    .btn-secondary:hover { background: #3a4a54; }
+    .btn-primary { background: var(--accent); color: #fff; flex: 1; justify-content: center; }
+    .btn-primary:hover { background: var(--accent-h); }
+    .btn-secondary { background: var(--border); color: var(--text); }
+    .btn-secondary:hover { opacity: .8; }
 
-    .download-section {
-      display: flex;
-      gap: 8px;
+    .dl-row { display: flex; gap: 7px; flex-shrink: 0; }
+    .dl-card { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+    .dl-btn {
+      width: 100%; padding: 6px 10px;
+      border-radius: 6px; border: 1px solid var(--border);
+      background: var(--panel-bg); color: var(--text);
+      cursor: pointer; font-size: 11px; font-weight: 500;
+      transition: background .2s, border-color .2s;
+    }
+    .dl-btn:hover { background: var(--border); border-color: var(--accent); }
+    .size-info { font-size: 9.5px; color: var(--muted); text-align: center; min-height: 13px; }
+
+    /* ── Preview panel ───────────────────────────────────────────── */
+    .preview-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+    .preview-ctrl {
+      background: var(--panel-bg);
+      padding: 7px 14px;
+      display: flex; align-items: center; gap: 9px;
+      border-bottom: 1px solid var(--border);
       flex-shrink: 0;
+      transition: background .35s, border-color .35s;
     }
-    .download-card {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-    }
-    .download-btn {
-      width: 100%;
-      padding: 7px 12px;
-      border-radius: 6px;
-      border: 1px solid #2a3942;
-      background: #202c33;
-      color: #e9edef;
-      cursor: pointer;
-      font-size: 12px;
-      font-weight: 500;
-      transition: background 0.2s, border-color 0.2s;
-    }
-    .download-btn:hover { background: #2a3942; border-color: #00a884; }
-    .size-info { font-size: 10px; color: #8696a0; text-align: center; min-height: 14px; }
-
-    /* ── Right – preview ─────────────────────────────────────────── */
-    .preview-panel {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    .preview-controls {
-      background: #202c33;
-      padding: 8px 16px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      border-bottom: 1px solid #2a3942;
-      flex-shrink: 0;
-    }
-
     .ctrl-btn {
-      width: 34px; height: 34px;
-      border-radius: 50%;
-      border: none;
-      background: #2a3942;
-      color: #e9edef;
-      cursor: pointer;
-      font-size: 14px;
-      transition: background 0.2s;
+      width: 32px; height: 32px; border-radius: 50%;
+      border: none; background: var(--border); color: var(--text);
+      cursor: pointer; font-size: 13px;
       display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
+      flex-shrink: 0; transition: background .2s;
     }
-    .ctrl-btn:hover  { background: #00a884; }
-
-    .progress-bar {
-      flex: 1;
-      height: 4px;
-      background: #2a3942;
-      border-radius: 2px;
-      overflow: hidden;
-      cursor: pointer;
+    .ctrl-btn:hover { background: var(--accent); color: #fff; }
+    .prog-bar {
+      flex: 1; height: 4px; background: var(--border);
+      border-radius: 2px; overflow: hidden; cursor: pointer;
     }
-    .progress-fill {
-      height: 100%;
-      background: #00a884;
-      width: 0%;
-      transition: width 0.15s;
-    }
+    .prog-fill { height: 100%; background: var(--accent); width: 0%; transition: width .15s; }
+    .prog-text { font-size: 10.5px; color: var(--muted); white-space: nowrap; }
+    .spd-ctrl { display: flex; align-items: center; gap: 5px; font-size: 10.5px; color: var(--muted); }
+    .spd-ctrl input[type=range] { width: 65px; accent-color: var(--accent); }
 
-    .progress-text { font-size: 11px; color: #8696a0; white-space: nowrap; }
-
-    .speed-control {
-      display: flex; align-items: center; gap: 6px;
-      font-size: 11px; color: #8696a0;
-    }
-    .speed-control input[type="range"] { width: 70px; accent-color: #00a884; }
-
-    /* ── Phone frame ─────────────────────────────────────────────── */
+    /* ── Phone container ─────────────────────────────────────────── */
     .phone-container {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-      background: #0d1117;
-      overflow: hidden;
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      padding: 12px; background: #080d11; overflow: hidden;
     }
 
-    .phone-frame {
-      width: 310px;
-      height: 580px;
-      background: #111b21;
-      border-radius: 38px;
-      border: 9px solid #1c2733;
-      box-shadow:
-        0 0 0 2px #2a3a46,
-        0 24px 64px rgba(0,0,0,.6),
-        inset 0 0 0 1px #2a3942;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      position: relative;
-    }
+    /* ── iPhone-style wrapper (side buttons via pseudo-elements) ─── */
+    .phone-wrap { position: relative; flex-shrink: 0; }
 
-    /* camera punch hole */
-    .phone-frame::before {
+    /* Mute + volume buttons on left */
+    .phone-wrap::before {
       content: '';
-      position: absolute;
-      top: 10px; left: 50%;
+      position: absolute; left: -5px; top: 100px; z-index: 1;
+      width: 4px; height: 26px;
+      background: var(--phone-rim);
+      border-radius: 2px 0 0 2px;
+      box-shadow: 0 -44px 0 var(--phone-rim), 0 46px 0 var(--phone-rim);
+    }
+    /* Power button on right */
+    .phone-wrap::after {
+      content: '';
+      position: absolute; right: -5px; top: 130px; z-index: 1;
+      width: 4px; height: 58px;
+      background: var(--phone-rim);
+      border-radius: 0 2px 2px 0;
+    }
+
+    /* ── Phone outer frame (titanium) ────────────────────────────── */
+    .phone-frame {
+      width: 320px; height: 652px;
+      background: var(--phone-outer);
+      border-radius: 52px;
+      padding: 11px;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,.10),
+        0 0 0 2px rgba(0,0,0,.5),
+        0 28px 70px rgba(0,0,0,.75),
+        inset 0 0 0 1px rgba(255,255,255,.05);
+      display: flex; flex-direction: column;
+      transition: background .35s;
+    }
+
+    /* ── Phone inner screen ──────────────────────────────────────── */
+    .phone-screen {
+      flex: 1;
+      border-radius: 43px;
+      overflow: hidden;
+      display: flex; flex-direction: column;
+      position: relative;
+      background: var(--wa-hdr);
+      transition: background .35s;
+    }
+
+    /* Dynamic Island */
+    .dynamic-island {
+      position: absolute; top: 12px; left: 50%;
       transform: translateX(-50%);
-      width: 10px; height: 10px;
-      border-radius: 50%;
-      background: #0d1117;
-      z-index: 10;
+      width: 122px; height: 32px;
+      background: #000; border-radius: 20px;
+      z-index: 30;
     }
 
-    .phone-status-bar {
-      background: #1f2c34;
-      padding: 18px 16px 4px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 10px;
-      color: #e9edef;
+    /* Status bar (time left, icons right — flanking Dynamic Island) */
+    .status-bar {
+      height: 50px;
+      padding: 0 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 11px; font-weight: 600; color: #fff;
       flex-shrink: 0;
     }
+    .status-right { display: flex; align-items: center; gap: 4px; font-size: 10px; }
 
-    /* ── WhatsApp UI ────────────────────────────────────────────── */
-    .wa-header {
-      background: #1f2c34;
-      padding: 7px 10px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    /* ── WhatsApp header bar ─────────────────────────────────────── */
+    .wa-hdr-bar {
+      background: var(--wa-hdr);
+      padding: 6px 10px;
+      display: flex; align-items: center; gap: 7px;
       flex-shrink: 0;
+      border-bottom: 1px solid rgba(0,0,0,.18);
+      transition: background .35s;
     }
-    .wa-back { color: #00a884; font-size: 17px; cursor: pointer; }
-    .group-avatar {
-      width: 34px; height: 34px;
-      background: #2a3942;
+    .wa-back { color: rgba(255,255,255,.85); font-size: 16px; cursor: pointer; }
+    .grp-avatar {
+      width: 32px; height: 32px;
+      background: rgba(255,255,255,.22);
       border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      font-size: 16px;
-      flex-shrink: 0;
-      overflow: hidden;
-      position: relative;
+      font-size: 15px; flex-shrink: 0;
     }
-    .group-info { flex: 1; overflow: hidden; }
-    .group-name    { font-size: 13px; font-weight: 600; color: #e9edef; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .group-members { font-size: 10px; color: #8696a0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .wa-actions { display: flex; gap: 12px; color: #8696a0; font-size: 15px; }
+    .grp-info { flex: 1; overflow: hidden; }
+    .grp-name { font-size: 12.5px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .grp-members { font-size: 9.5px; color: rgba(255,255,255,.7); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .wa-actions { display: flex; gap: 10px; color: rgba(255,255,255,.85); font-size: 14px; }
 
-    /* Chat scroll area */
+    /* ── Chat scroll container ───────────────────────────────────── */
     .wa-chat {
       flex: 1;
-      overflow-y: auto;
-      padding: 6px 6px 4px;
-      background-color: #0b141a;
-      /* subtle pattern */
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Crect width='60' height='60' fill='%230b141a'/%3E%3Ccircle cx='10' cy='10' r='1' fill='%23ffffff08'/%3E%3Ccircle cx='30' cy='30' r='1' fill='%23ffffff08'/%3E%3Ccircle cx='50' cy='50' r='1' fill='%23ffffff08'/%3E%3C/svg%3E");
-      scroll-behavior: smooth;
+      overflow-y: auto; overflow-x: hidden;
+      background-color: var(--chat-bg);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Ccircle cx='10' cy='10' r='1.1' fill='%23ffffff05'/%3E%3Ccircle cx='40' cy='40' r='1.1' fill='%23ffffff05'/%3E%3Ccircle cx='70' cy='70' r='1.1' fill='%23ffffff05'/%3E%3C/svg%3E");
+      transition: background-color .35s;
     }
-    .wa-chat::-webkit-scrollbar { width: 3px; }
-    .wa-chat::-webkit-scrollbar-track { background: transparent; }
-    .wa-chat::-webkit-scrollbar-thumb { background: #2a3942; border-radius: 2px; }
+    .wa-chat::-webkit-scrollbar { width: 2px; }
+    .wa-chat::-webkit-scrollbar-thumb { background: var(--border); border-radius: 1px; }
+
+    /* ── Bottom-anchored inner container ─────────────────────────── */
+    /*
+      min-height: 100% ensures that even with few messages the content
+      fills the scroll container so justify-content: flex-end pushes
+      everything to the bottom of the visible area.
+      When messages overflow, chat-inner grows naturally and wa-chat scrolls.
+    */
+    .chat-inner {
+      min-height: 100%;
+      display: flex; flex-direction: column;
+      justify-content: flex-end;
+      padding: 6px 5px 3px;
+      gap: 1px;
+    }
 
     /* ── System messages ─────────────────────────────────────────── */
     .sys-msg {
       text-align: center;
-      margin: 5px 0;
+      margin: 4px 0;
+      opacity: 0;
+      transition: opacity .35s ease;
     }
+    .sys-msg.visible { opacity: 1; }
     .sys-msg span {
-      background: rgba(17, 27, 33, 0.82);
-      color: #8696a0;
-      font-size: 10px;
-      padding: 3px 8px;
+      background: var(--sys-bg);
+      color: var(--sys-text);
+      font-size: 9.5px;
+      padding: 3px 9px;
       border-radius: 8px;
-      display: inline-block;
-      max-width: 90%;
+      display: inline-block; max-width: 95%;
     }
 
-    /* ── Message bubbles ─────────────────────────────────────────── */
-    .msg-wrapper {
-      display: flex;
-      flex-direction: column;
-      margin: 1px 0 3px;
+    /* ── Message wrappers ────────────────────────────────────────── */
+    .msg-wrap {
+      display: flex; flex-direction: column;
+      margin-bottom: 2px;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity .3s ease, transform .3s ease;
     }
-    .msg-wrapper.me    { align-items: flex-end; }
-    .msg-wrapper.other { align-items: flex-start; }
+    .msg-wrap.visible { opacity: 1; transform: translateY(0); }
+    .msg-wrap.me    { align-items: flex-end; }
+    .msg-wrap.other { align-items: flex-start; }
 
     .sender-name {
-      font-size: 10.5px;
-      font-weight: 600;
-      padding: 0 4px;
-      margin-bottom: 1px;
+      font-size: 10px; font-weight: 700;
+      padding: 0 5px; margin-bottom: 2px;
     }
 
     .bubble {
-      max-width: 220px;
+      max-width: 215px;
       padding: 5px 8px 15px;
-      border-radius: 7.5px;
-      font-size: 11.5px;
-      line-height: 1.4;
+      border-radius: 8px;
+      font-size: 11px; line-height: 1.45;
       position: relative;
       word-break: break-word;
+      color: var(--txt-bubble);
+      transition: background .35s;
     }
-    .bubble.me    { background: #005c4b; border-top-right-radius: 2px; }
-    .bubble.other { background: #202c33; border-top-left-radius: 2px; }
+    .bubble.me    { background: var(--bubble-me); border-top-right-radius: 2px; }
+    .bubble.other { background: var(--bubble-other); border-top-left-radius: 2px; box-shadow: 0 1px 2px rgba(0,0,0,.15); }
 
     .msg-time {
-      position: absolute;
-      bottom: 3px; right: 6px;
-      font-size: 9px; color: #8696a0;
-      white-space: nowrap;
+      position: absolute; bottom: 3px; right: 6px;
+      font-size: 8.5px; color: var(--muted); white-space: nowrap;
     }
-    .tick { color: #53bdeb; }
+    .tick { color: var(--tick); }
 
-    /* Reactions */
-    .reactions {
-      display: flex; gap: 3px; flex-wrap: wrap;
-      margin-top: 2px;
-    }
+    /* ── Reactions ───────────────────────────────────────────────── */
+    .reactions { display: flex; gap: 3px; flex-wrap: wrap; margin-top: 3px; padding: 0 3px; }
+
     .reaction-pill {
-      background: #202c33;
-      border: 1px solid #2a3942;
-      border-radius: 10px;
-      padding: 1px 5px;
-      font-size: 10.5px;
-      display: flex; align-items: center; gap: 2px;
+      background: var(--react-bg);
+      border: 1px solid var(--react-border);
+      border-radius: 12px;
+      padding: 2px 7px 2px 5px;
+      display: inline-flex; align-items: center; gap: 3px;
+      font-size: 10px;
       cursor: default;
+      /* Hidden by default — animated in one by one */
+      opacity: 0;
+      transform: scale(.4) translateY(5px);
+      transition: opacity .22s ease, transform .28s cubic-bezier(.34,1.56,.64,1);
+      box-shadow: 0 1px 3px rgba(0,0,0,.18);
     }
-    .reaction-count { font-size: 9.5px; color: #8696a0; }
+    .reaction-pill.visible { opacity: 1; transform: scale(1) translateY(0); }
+    .reactor { font-size: 9px; font-weight: 700; color: var(--react-name); }
+    .react-emoji { font-size: 11px; }
 
-    /* Typing indicator */
-    .typing-indicator {
-      display: none;
-      align-items: center;
-      gap: 6px;
-      padding: 3px 4px;
-      margin-bottom: 3px;
+    /* ── Typing indicator ────────────────────────────────────────── */
+    .typing-wrap {
+      display: none; align-items: center; gap: 5px;
+      padding: 3px 3px; margin-bottom: 2px;
     }
-    .typing-indicator.visible { display: flex; }
-    .typing-name { font-size: 10px; color: #8696a0; }
+    .typing-wrap.visible { display: flex; }
+    .typing-name { font-size: 9.5px; color: var(--muted); }
     .typing-bubble {
-      background: #202c33;
-      border-radius: 7.5px;
-      padding: 7px 10px;
-      display: flex; gap: 3px;
+      background: var(--bubble-other);
+      border-radius: 8px; border-top-left-radius: 2px;
+      padding: 7px 10px; display: flex; gap: 3px;
+      box-shadow: 0 1px 2px rgba(0,0,0,.15);
     }
     .dot {
       width: 5px; height: 5px;
-      background: #8696a0;
-      border-radius: 50%;
+      background: var(--muted); border-radius: 50%;
       animation: bounce 1.2s infinite ease-in-out;
     }
-    .dot:nth-child(2) { animation-delay: 0.2s; }
-    .dot:nth-child(3) { animation-delay: 0.4s; }
+    .dot:nth-child(2) { animation-delay: .2s; }
+    .dot:nth-child(3) { animation-delay: .4s; }
     @keyframes bounce {
-      0%, 60%, 100% { transform: translateY(0); }
-      30% { transform: translateY(-4px); }
+      0%,60%,100% { transform: translateY(0); }
+      30%          { transform: translateY(-5px); }
     }
 
-    /* Input bar (decorative) */
+    /* ── Input bar (decorative) ──────────────────────────────────── */
     .wa-input-bar {
-      background: #1f2c34;
+      background: var(--input-bar);
       padding: 5px 8px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      display: flex; align-items: center; gap: 7px;
       flex-shrink: 0;
+      transition: background .35s;
     }
     .wa-input-field {
-      flex: 1;
-      background: #2a3942;
-      border-radius: 20px;
-      padding: 5px 12px;
-      font-size: 11px;
-      color: #8696a0;
+      flex: 1; background: var(--input-field);
+      border-radius: 22px; padding: 5px 12px;
+      font-size: 10.5px; color: var(--muted);
+      transition: background .35s;
     }
 
-    /* Appear animation */
-    .msg-wrapper, .sys-msg {
+    /* ── Home indicator (iPhone bottom bar) ──────────────────────── */
+    .home-indicator {
+      background: var(--input-bar);
+      height: 22px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .home-bar {
+      width: 120px; height: 4px;
+      background: var(--muted); border-radius: 2px; opacity: .5;
+    }
+
+    /* ── Toast notification for theme humor ─────────────────────── */
+    .theme-toast {
+      position: fixed; bottom: 22px; left: 50%;
+      transform: translateX(-50%) translateY(70px);
+      background: rgba(30,30,30,.95);
+      color: #fff;
+      padding: 9px 20px;
+      border-radius: 22px;
+      font-size: 12px;
+      z-index: 999;
       opacity: 0;
-      transform: translateY(6px);
-      transition: opacity 0.25s ease, transform 0.25s ease;
+      transition: transform .4s cubic-bezier(.34,1.56,.64,1), opacity .3s;
+      white-space: nowrap; max-width: 90vw; text-align: center;
+      pointer-events: none;
     }
-    .msg-wrapper.visible, .sys-msg.visible {
-      opacity: 1; transform: translateY(0);
-    }
-    /* show-all skips animation */
-    .show-all .msg-wrapper,
-    .show-all .sys-msg {
-      opacity: 1; transform: translateY(0);
-    }
+    .theme-toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
   </style>
 </head>
 <body>
@@ -433,39 +476,39 @@
 <header>
   <div class="logo">💬</div>
   <h1>WhatsApp Group Chat Generator</h1>
-  <p>Animate · Preview · Download</p>
+  <button class="theme-btn" id="theme-btn" onclick="toggleTheme()">☀️ Light Mode</button>
 </header>
 
 <div class="main">
 
-  <!-- ── Editor panel ──────────────────────────────────────────── -->
+  <!-- ── Editor ──────────────────────────────────────────────────── -->
   <div class="editor-panel">
-    <div class="panel-header">📝 Chat Script</div>
-    <div class="editor-content">
+    <div class="panel-hdr">📝 Chat Script</div>
+    <div class="editor-body">
 
-      <div class="format-guide">
+      <div class="fmt-guide">
         <strong>Format guide:</strong><br>
-        <code># GROUP: name</code> &nbsp;group title&nbsp;
-        <code># ME: Name</code> your name (right side)<br>
-        <code>[HH:MM] Name: message</code> &nbsp;—&nbsp; chat bubble<br>
-        <code>&gt; 😂×3 👍×1</code> &nbsp;—&nbsp; reactions to previous msg<br>
-        <code>[system] text</code> &nbsp;—&nbsp; system notification
+        <code># GROUP: name</code>&nbsp; group title &nbsp;
+        <code># ME: Name</code>&nbsp; your name (right side)<br>
+        <code>[HH:MM] Name: message</code>&nbsp;—&nbsp;chat bubble<br>
+        <code>&gt; Bob:😂 Sarah:💀</code>&nbsp;—&nbsp;reactions (name:emoji)<br>
+        <code>[system] text</code>&nbsp;—&nbsp;system event
       </div>
 
       <textarea id="chat-input" spellcheck="false"></textarea>
 
-      <div class="editor-actions">
+      <div class="editor-btns">
         <button class="btn btn-primary" onclick="generateChat()">▶ Generate Preview</button>
-        <button class="btn btn-secondary" onclick="showAllMessages()" title="Show all messages instantly">⊞ Show All</button>
+        <button class="btn btn-secondary" onclick="showAll()" title="Show all instantly">⊞ All</button>
       </div>
 
-      <div class="download-section">
-        <div class="download-card">
-          <button class="download-btn" onclick="downloadPNG()">📷 Download PNG</button>
+      <div class="dl-row">
+        <div class="dl-card">
+          <button class="dl-btn" onclick="downloadPNG()">📷 Download PNG</button>
           <div class="size-info" id="png-size">—</div>
         </div>
-        <div class="download-card">
-          <button class="download-btn" onclick="downloadTXT()">📄 Download TXT</button>
+        <div class="dl-card">
+          <button class="dl-btn" onclick="downloadTXT()">📄 Download TXT</button>
           <div class="size-info" id="txt-size">—</div>
         </div>
       </div>
@@ -473,66 +516,83 @@
     </div>
   </div>
 
-  <!-- ── Preview panel ─────────────────────────────────────────── -->
+  <!-- ── Preview ─────────────────────────────────────────────────── -->
   <div class="preview-panel">
 
-    <div class="preview-controls">
+    <div class="preview-ctrl">
       <button class="ctrl-btn" id="play-btn" onclick="togglePlay()" title="Play / Pause">▶</button>
-      <button class="ctrl-btn" onclick="restartAnimation()" title="Restart">↺</button>
-
-      <div class="progress-bar" id="progress-bar" onclick="seekProgress(event)">
-        <div class="progress-fill" id="progress-fill"></div>
+      <button class="ctrl-btn" onclick="restart()" title="Restart">↺</button>
+      <div class="prog-bar" id="prog-bar" onclick="seekProgress(event)">
+        <div class="prog-fill" id="prog-fill"></div>
       </div>
-      <div class="progress-text" id="progress-text">0 / 0</div>
-
-      <div class="speed-control">
+      <div class="prog-text" id="prog-text">0 / 0</div>
+      <div class="spd-ctrl">
         <span>Speed</span>
-        <input type="range" id="speed-slider" min="1" max="5" value="3" oninput="updateSpeed(this.value)">
-        <span id="speed-label">1×</span>
+        <input type="range" id="spd-slider" min="1" max="5" value="3" oninput="setSpeed(this.value)">
+        <span id="spd-label">1×</span>
       </div>
     </div>
 
     <div class="phone-container">
-      <div class="phone-frame" id="phone-frame">
+      <div class="phone-wrap">
+        <div class="phone-frame" id="phone-frame">
+          <div class="phone-screen">
 
-        <div class="phone-status-bar">
-          <span id="clock">9:00</span>
-          <span>▲▲▲ 🔋</span>
-        </div>
+            <!-- Dynamic Island -->
+            <div class="dynamic-island"></div>
 
-        <div class="wa-header">
-          <span class="wa-back">←</span>
-          <div class="group-avatar" id="group-avatar">👥</div>
-          <div class="group-info">
-            <div class="group-name"    id="group-name-display">Group Chat</div>
-            <div class="group-members" id="group-members-display">loading…</div>
-          </div>
-          <div class="wa-actions"><span>📹</span><span>📞</span><span>⋮</span></div>
-        </div>
-
-        <div class="wa-chat" id="chat-messages">
-          <div class="typing-indicator" id="typing-indicator">
-            <div class="typing-bubble">
-              <div class="dot"></div>
-              <div class="dot"></div>
-              <div class="dot"></div>
+            <!-- iOS status bar -->
+            <div class="status-bar">
+              <span id="clock"></span>
+              <div class="status-right">
+                <span>5G</span><span>▮▮▮</span><span>🔋</span>
+              </div>
             </div>
-            <span class="typing-name" id="typing-name"></span>
-          </div>
-        </div>
 
-        <div class="wa-input-bar">
-          <span>😊</span>
-          <div class="wa-input-field">Message</div>
-          <span>📎</span>
-          <span>🎤</span>
-        </div>
+            <!-- WhatsApp header -->
+            <div class="wa-hdr-bar">
+              <span class="wa-back">←</span>
+              <div class="grp-avatar" id="grp-avatar">👥</div>
+              <div class="grp-info">
+                <div class="grp-name" id="grp-name">Group Chat</div>
+                <div class="grp-members" id="grp-members">loading…</div>
+              </div>
+              <div class="wa-actions"><span>📹</span><span>📞</span><span>⋮</span></div>
+            </div>
 
-      </div><!-- /.phone-frame -->
+            <!-- Chat area: wa-chat is the scroller, chat-inner is the flex bottom-anchor -->
+            <div class="wa-chat" id="chat-messages">
+              <div class="chat-inner" id="chat-inner">
+                <!-- messages are prepended to this; typing indicator stays last -->
+                <div class="typing-wrap" id="typing-wrap">
+                  <div class="typing-bubble">
+                    <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+                  </div>
+                  <span class="typing-name" id="typing-name"></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Decorative input bar -->
+            <div class="wa-input-bar">
+              <span>😊</span>
+              <div class="wa-input-field">Message</div>
+              <span>📎</span><span>🎤</span>
+            </div>
+
+            <!-- iPhone home indicator -->
+            <div class="home-indicator"><div class="home-bar"></div></div>
+
+          </div><!-- /.phone-screen -->
+        </div><!-- /.phone-frame -->
+      </div><!-- /.phone-wrap -->
     </div>
 
   </div><!-- /.preview-panel -->
 </div><!-- /.main -->
+
+<!-- Humor toast for theme switch -->
+<div class="theme-toast" id="theme-toast"></div>
 
 <!-- html2canvas for PNG export -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"
@@ -541,72 +601,78 @@
 
 <script>
 /* ================================================================
-   SAMPLE DATA
+   SAMPLE – humorous world-news group chat
+   Reaction format: Name:emoji  (each person, shown one at a time)
 ================================================================ */
 const SAMPLE = `# GROUP: Breaking News Commentators 🌍🔥
 # ME: Alice
 # MEMBERS: Alice,Bob,Charlie,Sarah,Dave,Emma
 
 [09:00] Bob: 🚨 BREAKING: Scientists confirm the sun is just a very dedicated lamp
-[09:00] Alice: 4.6 BILLION years of overtime 😭
-[09:01] Charlie: someone file an HR complaint
-> 😂×4 💀×2
+[09:00] Alice: wait
+[09:00] Alice: so it's been clocking in every single morning for 4.6 BILLION years
+[09:01] Alice: and we never even said thank you??
+[09:01] Charlie: someone file an HR complaint immediately
+> Bob:😂 Sarah:😂 Dave:💀 Emma:😂
 [system] Dave changed the group photo
-[09:02] Dave: I made it a photo of the sun since we're talking about it
-[09:02] Sarah: peak group management right there
+[09:02] Dave: I changed it to a photo of the sun. felt right.
+[09:02] Sarah: peak group management ngl
 [09:02] Emma: 11/10 no notes
-> 👏×3 😂×2
+> Alice:👏 Bob:👏 Charlie:👏 Sarah:😂
 [system] Dave changed the group subject to "The Sun HR Department ☀️"
-[09:03] Alice: new topic: Elon just announced he's buying the moon
-[09:03] Bob: at this point I'm not even surprised
-[09:03] Charlie: he's going to rename it to 𝕏
-> 💀×5 😂×3
-[09:04] Sarah: 𝕏 (formerly known as Moon)
-> 😂×6 🎉×1
+[09:03] Alice: NEW TOPIC: Elon just announced he's buying the moon
+[09:03] Bob: at this point I'm not even surprised anymore
+[09:03] Charlie: the moon will be renamed 𝕏
+[09:03] Sarah: and he'll charge $8/month to see the full moon
+> Bob:💀 Alice:😂 Dave:💀 Emma:😂 Charlie:😂
+[09:04] Emma: 𝕏 (formerly known as Moon)
+> Alice:😂 Bob:😂 Dave:😂 Sarah:😂 Charlie:🎉
 [system] Emma left
-[09:05] Dave: Emma left because she couldn't handle the truth 😂
+[09:05] Dave: Emma couldn't handle the truth 😂
 [system] Alice added Emma
-[09:05] Emma: my wifi died I wasn't leaving lmao
-[09:05] Bob: sure Emma sure 👀
-> 😂×4 👀×2
+[09:05] Emma: MY WIFI DIED I WAS NOT LEAVING
+[09:05] Bob: sure Jan
+> Alice:😂 Charlie:😂 Sarah:😂 Dave:😂 Emma:👀
 [09:06] Charlie: anyway AI took my job today so that's fun
-[09:06] Alice: wait really???
-[09:06] Charlie: no I'm the AI
+[09:06] Alice: wait WHAT
+[09:06] Charlie: jk
+[09:06] Charlie: I AM the AI
 [09:07] Charlie: I've been an AI this whole time 🤖
-> 💀×6 🤖×3 😂×4
-[09:07] Sarah: CHARLIE HAS BEEN A BOT???
-[09:07] Dave: explains the perfect grammar ngl
-> 😂×5
-[09:08] Bob: I asked ChatGPT to write my resignation letter and it was better than anything I'd write
+> Bob:💀 Sarah:💀 Alice:💀 Dave:💀 Emma:🤖
+[09:07] Sarah: THE GRAMMAR. IT ALL MAKES SENSE NOW
+[09:07] Dave: explains why he never typos
+> Alice:😂 Bob:😂 Emma:😂 Sarah:😂
+[09:08] Bob: so I used ChatGPT to write my resignation letter
+[09:08] Bob: it was genuinely better than anything I could write
 [09:08] Alice: did you send it??
-[09:08] Bob: I'm using it as my dating profile bio instead
-> 😂×5 💀×2 👍×1
+[09:08] Bob: using it as my dating bio instead
+> Alice:😂 Sarah:😂 Charlie:😂 Dave:💀 Emma:👍
 [system] Charlie changed the group theme
-[09:09] Charlie: I changed it to "robot uprising" theme — seemed fitting 🤖
+[09:09] Charlie: changed the theme to "robot uprising" 🤖 seemed fitting
 [09:09] Sarah: Charlie there is no robot uprising theme
 [09:09] Charlie: there is now
-> 😂×4 👀×1
+> Alice:😂 Dave:😂 Emma:👀
 [system] Dave removed Charlie
 [09:09] Dave: ok that's enough from the AI 😂
 [09:10] Charlie: THIS IS DISCRIMINATION
 [system] Dave added Charlie
 [09:10] Dave: kidding kidding 😅
 [09:10] Charlie: I was about to call my lawyer
-[09:10] Bob: your lawyer is also an AI
-> 😂×6 💀×3
-[09:11] Alice: ok last story: climate scientists say we have 12 years to fix things
-[09:11] Emma: they've been saying 12 years since 2006 💀
-[09:11] Sarah: the 12 years auto-renews like a Netflix subscription
-> 😂×5 😭×2 💀×3
-[09:12] Dave: it's funny because we're all going to die 😭😭
-[09:12] Bob: this is the most accurate news analysis I've ever seen
-[09:12] Charlie: and I'm an AI so I'll survive anyway 🤖
-> 😂×4 🤖×3
+[09:10] Bob: your lawyer is also an AI bro
+> Alice:😂 Sarah:😂 Dave:😂 Emma:💀 Charlie:💀
+[09:11] Alice: FINAL STORY: climate scientists say we have 12 years
+[09:11] Emma: they said 12 years in 2006 💀
+[09:11] Sarah: it auto-renews like a Netflix subscription
+[09:12] Dave: and you can't cancel without talking to retention
+> Alice:😂 Bob:😂 Charlie:😂 Emma:😭 Sarah:💀
+[09:12] Bob: this is the most accurate news coverage I've ever seen
+[09:12] Charlie: and I'm an AI so I'll outlive all of you anyway 🤖
+> Alice:😂 Bob:🤖 Emma:😂 Dave:😂
 [system] Alice changed the group description to "saving the world one meme at a time 🌍"
-[09:13] Alice: ok that's the news for today folks 👏
-[09:13] Bob: 0% informed 100% entertained
-[09:13] Sarah: honestly this should be on CNN
-> ❤️×4 😂×3 👏×5`;
+[09:13] Alice: that's your news for today folks 👏
+[09:13] Bob: 0% informed, 100% entertained
+[09:13] Sarah: CNN could never
+> Alice:❤️ Bob:❤️ Dave:❤️ Emma:👏 Charlie:👏`;
 
 /* ================================================================
    PARSER
@@ -616,24 +682,23 @@ function parseChat(text) {
   const meta  = { group: 'WhatsApp Group', me: null, members: [] };
   const items = [];
 
-  for (let i = 0; i < lines.length; i++) {
-    const raw  = lines[i];
+  for (const raw of lines) {
     const line = raw.trim();
     if (!line) continue;
 
-    // Metadata
+    // Metadata lines
     if (line.startsWith('#')) {
       const m = line.match(/^#\s*(\w+)\s*:\s*(.+)/);
       if (m) {
         const k = m[1].toLowerCase(), v = m[2].trim();
-        if (k === 'group')   meta.group   = v;
-        else if (k === 'me') meta.me      = v;
+        if      (k === 'group')   meta.group   = v;
+        else if (k === 'me')      meta.me      = v;
         else if (k === 'members') meta.members = v.split(',').map(s => s.trim());
       }
       continue;
     }
 
-    // Reactions to previous message
+    // Reactions line  >  Bob:😂 Sarah:💀 …
     if (line.startsWith('>')) {
       const last = [...items].reverse().find(x => x.type === 'message');
       if (last) last.reactions = parseReactions(line.slice(1).trim());
@@ -650,93 +715,99 @@ function parseChat(text) {
     const m = line.match(/^\[(\d{1,2}:\d{2}(?:\s*[AaPp][Mm])?)\]\s+(.+?):\s*([\s\S]*)$/);
     if (m) {
       items.push({
-        type:      'message',
-        time:       m[1],
-        sender:     m[2].trim(),
-        text:       m[3],
-        reactions:  []
+        type: 'message', time: m[1],
+        sender: m[2].trim(), text: m[3],
+        reactions: []
       });
     }
   }
-
   return { meta, items };
 }
 
+// Supports new "Name:emoji" format AND legacy "emoji×N" fallback
 function parseReactions(str) {
   const out = [];
   str.split(/\s+/).forEach(part => {
     if (!part) return;
-    const m = part.match(/^(.+?)×(\d+)$/);
-    if (m) out.push({ emoji: m[1], count: parseInt(m[2], 10) });
-    else    out.push({ emoji: part, count: 1 });
+    // New: Bob:😂
+    const nm = part.match(/^([^:]+):(.+)$/);
+    if (nm) { out.push({ name: nm[1], emoji: nm[2] }); return; }
+    // Legacy: 😂×4
+    const lm = part.match(/^(.+?)×(\d+)$/);
+    if (lm) { for (let i = 0; i < +lm[2]; i++) out.push({ name: null, emoji: lm[1] }); return; }
+    out.push({ name: null, emoji: part });
   });
   return out;
 }
 
 /* ================================================================
-   MEMBER COLOURS  (WhatsApp palette)
+   MEMBER COLOURS
 ================================================================ */
-const MEMBER_COLORS = [
-  '#e91e63','#9c27b0','#03a9f4','#00bcd4',
-  '#4caf50','#ff9800','#ff5722','#607d8b'
-];
-let colorMap = {};
-let colorIdx = 0;
+const PALETTE = ['#e91e63','#9c27b0','#03a9f4','#00bcd4','#4caf50','#ff9800','#ff5722','#607d8b'];
+let colorMap = {}, colorIdx = 0;
 function memberColor(name) {
-  if (!colorMap[name]) {
-    colorMap[name] = MEMBER_COLORS[colorIdx % MEMBER_COLORS.length];
-    colorIdx++;
-  }
+  if (!colorMap[name]) { colorMap[name] = PALETTE[colorIdx++ % PALETTE.length]; }
   return colorMap[name];
 }
 
 /* ================================================================
-   RENDERER  – build DOM nodes (hidden by default for animation)
+   ANIMATION STATE
+   allSteps is an ordered array of animation events:
+     { kind:'msg',      node: DOMElement }
+     { kind:'sys',      node: DOMElement }
+     { kind:'reaction', pill: DOMElement }
 ================================================================ */
-let parsedData  = null;
-let allNodes    = [];      // ordered list of DOM nodes to reveal
+let parsedData = null;
+let allSteps   = [];
+let curIdx     = 0;
+let playing    = false;
+let timer      = null;
+let speedVal   = 3;
 
+// Curated per-event delays (ms) for slider positions 1–5 (slowest → fastest).
+// Labels shown: 0.5× 1× 1.5× 2× 3× — relative to the default position (3 = 1800 ms).
+const SPEED_MS = [4500, 2800, 1800, 900, 350];
+
+/* ================================================================
+   RENDER
+================================================================ */
 function generateChat() {
-  const raw = document.getElementById('chat-input').value;
-  parsedData = parseChat(raw);
+  const raw   = document.getElementById('chat-input').value;
+  parsedData  = parseChat(raw);
+  colorMap    = {}; colorIdx = 0;
 
-  colorMap = {}; colorIdx = 0;
-
-  // header
-  document.getElementById('group-name-display').textContent    = parsedData.meta.group;
-  document.getElementById('group-members-display').textContent =
-    (parsedData.meta.members.length
+  document.getElementById('grp-name').textContent    = parsedData.meta.group;
+  document.getElementById('grp-members').textContent =
+    parsedData.meta.members.length
       ? parsedData.meta.members.join(', ')
-      : 'tap to see members');
+      : 'tap to see members';
 
-  // build chat
-  const container = document.getElementById('chat-messages');
-  // keep typing indicator; remove everything else
-  const typing = document.getElementById('typing-indicator');
-  container.innerHTML = '';
-  container.appendChild(typing);
+  // Reset the inner container — keep the typing indicator as the last child
+  const inner  = document.getElementById('chat-inner');
+  const typing = document.getElementById('typing-wrap');
+  inner.innerHTML = '';
+  inner.appendChild(typing);
   typing.classList.remove('visible');
 
-  allNodes = [];
+  allSteps = [];
 
   parsedData.items.forEach(item => {
-    let node;
     if (item.type === 'system') {
-      node = buildSystemNode(item);
+      const node = buildSystemNode(item);
+      inner.insertBefore(node, typing);   // insert before typing indicator
+      allSteps.push({ kind: 'sys', node });
     } else {
-      node = buildMessageNode(item, parsedData.meta.me);
+      const { wrapper, pills } = buildMessageNode(item, parsedData.meta.me);
+      inner.insertBefore(wrapper, typing);
+      allSteps.push({ kind: 'msg', node: wrapper });
+      // Each reaction pill is its own animation step
+      pills.forEach(pill => allSteps.push({ kind: 'reaction', pill }));
     }
-    container.appendChild(node);
-    allNodes.push(node);
   });
 
-  // reset animation state
-  currentIdx  = 0;
-  isPlaying   = false;
+  curIdx  = 0; playing = false;
   document.getElementById('play-btn').textContent = '▶';
   updateProgress();
-
-  // estimate TXT size immediately
   updateTxtSize(raw);
 }
 
@@ -750,9 +821,9 @@ function buildSystemNode(item) {
 }
 
 function buildMessageNode(item, me) {
-  const isMe = (item.sender === me);
+  const isMe   = (item.sender === me);
   const wrapper = document.createElement('div');
-  wrapper.className = 'msg-wrapper ' + (isMe ? 'me' : 'other');
+  wrapper.className = 'msg-wrap ' + (isMe ? 'me' : 'other');
 
   if (!isMe) {
     const nameEl = document.createElement('div');
@@ -765,165 +836,221 @@ function buildMessageNode(item, me) {
   const bubble = document.createElement('div');
   bubble.className = 'bubble ' + (isMe ? 'me' : 'other');
 
-  const textEl = document.createElement('span');
-  textEl.textContent = item.text;
-  bubble.appendChild(textEl);
+  const txt = document.createElement('span');
+  txt.textContent = item.text;
+  bubble.appendChild(txt);
 
-  const timeEl = document.createElement('span');
-  timeEl.className = 'msg-time';
-  timeEl.innerHTML = item.time + (isMe ? ' <span class="tick">✓✓</span>' : '');
-  bubble.appendChild(timeEl);
-
+  const time = document.createElement('span');
+  time.className = 'msg-time';
+  time.innerHTML = item.time + (isMe ? ' <span class="tick">✓✓</span>' : '');
+  bubble.appendChild(time);
   wrapper.appendChild(bubble);
 
-  if (item.reactions && item.reactions.length) {
-    const reactDiv = document.createElement('div');
-    reactDiv.className = 'reactions';
-    item.reactions.forEach(r => {
-      const pill = document.createElement('span');
-      pill.className = 'reaction-pill';
-      pill.innerHTML = r.emoji + ' <span class="reaction-count">' + r.count + '</span>';
-      reactDiv.appendChild(pill);
-    });
-    wrapper.appendChild(reactDiv);
-  }
+  // Build reaction container + pills (initially hidden)
+  const reactDiv = document.createElement('div');
+  reactDiv.className = 'reactions';
+  wrapper.appendChild(reactDiv);
 
-  return wrapper;
+  const pills = (item.reactions || []).map(r => {
+    const pill = document.createElement('span');
+    pill.className = 'reaction-pill';
+    if (r.name) {
+      const n = document.createElement('span');
+      n.className = 'reactor';
+      n.textContent = r.name;
+      pill.appendChild(n);
+    }
+    const e = document.createElement('span');
+    e.className = 'react-emoji';
+    e.textContent = r.emoji;
+    pill.appendChild(e);
+    reactDiv.appendChild(pill);
+    return pill;
+  });
+
+  return { wrapper, pills };
 }
 
 /* ================================================================
-   ANIMATION
+   ANIMATION ENGINE
 ================================================================ */
-// ms per message: [0.5×, 0.75×, 1×, 2×, 4×] corresponding to slider values 1–5
-const SPEED_DELAYS = [2200, 1400, 900, 480, 200];
-let currentIdx  = 0;
-let isPlaying   = false;
-let animTimer   = null;
-let speedValue  = 3;
-
 function togglePlay() {
   if (!parsedData) { generateChat(); return; }
-  isPlaying = !isPlaying;
-  document.getElementById('play-btn').textContent = isPlaying ? '⏸' : '▶';
-  if (isPlaying) scheduleNext();
-  else clearTimeout(animTimer);
+  playing = !playing;
+  document.getElementById('play-btn').textContent = playing ? '⏸' : '▶';
+  if (playing) scheduleNext();
+  else clearTimeout(timer);
 }
 
 function scheduleNext() {
-  if (!isPlaying) return;
-  if (currentIdx >= allNodes.length) {
-    isPlaying = false;
+  if (!playing) return;
+  if (curIdx >= allSteps.length) {
+    playing = false;
     document.getElementById('play-btn').textContent = '▶';
     hideTyping();
     return;
   }
 
-  const node    = allNodes[currentIdx];
-  const isMsg   = node.classList.contains('msg-wrapper');
-  const delay   = SPEED_DELAYS[speedValue - 1];
-  const typingMs = Math.min(delay * 0.45, 700);
+  const step  = allSteps[curIdx];
+  const delay = SPEED_MS[speedVal - 1];
 
-  if (isMsg) {
-    // show typing indicator
-    const sender = node.querySelector('.sender-name');
-    showTyping(sender ? sender.textContent : '');
-    animTimer = setTimeout(() => {
+  if (step.kind === 'msg') {
+    // Show typing indicator first, then reveal message
+    const senderEl = step.node.querySelector('.sender-name');
+    showTyping(senderEl ? senderEl.textContent : '');
+    const typingMs = Math.min(delay * 0.5, 1100);
+    timer = setTimeout(() => {
       hideTyping();
-      revealNode(node);
-      currentIdx++;
-      updateProgress();
-      animTimer = setTimeout(scheduleNext, delay * 0.55);
+      revealStep(step);
+      curIdx++; updateProgress();
+      timer = setTimeout(scheduleNext, delay * 0.5);
     }, typingMs);
-  } else {
-    // system message – no typing indicator
-    animTimer = setTimeout(() => {
-      revealNode(node);
-      currentIdx++;
-      updateProgress();
-      animTimer = setTimeout(scheduleNext, delay * 0.3);
-    }, delay * 0.3);
+
+  } else if (step.kind === 'sys') {
+    // System messages appear with a shorter pause
+    timer = setTimeout(() => {
+      revealStep(step);
+      curIdx++; updateProgress();
+      timer = setTimeout(scheduleNext, delay * 0.35);
+    }, delay * 0.35);
+
+  } else if (step.kind === 'reaction') {
+    // Reactions pop in quickly one by one — no typing indicator
+    const reactDelay = Math.max(350, delay * 0.18);
+    timer = setTimeout(() => {
+      revealStep(step);
+      curIdx++; updateProgress();
+      timer = setTimeout(scheduleNext, reactDelay * 0.6);
+    }, reactDelay * 0.4);
   }
 }
 
-function revealNode(node) {
-  node.classList.add('visible');
+function revealStep(step) {
+  if (step.kind === 'reaction') {
+    step.pill.classList.add('visible');
+  } else {
+    step.node.classList.add('visible');
+  }
+  scrollBottom();
+}
+
+function hideStep(step) {
+  if (step.kind === 'reaction') step.pill.classList.remove('visible');
+  else step.node.classList.remove('visible');
+}
+
+function scrollBottom() {
   const chat = document.getElementById('chat-messages');
   chat.scrollTop = chat.scrollHeight;
 }
 
 function showTyping(name) {
-  const ti = document.getElementById('typing-indicator');
   document.getElementById('typing-name').textContent = name ? name + ' is typing…' : '';
-  ti.classList.add('visible');
-  // scroll to bottom
-  const chat = document.getElementById('chat-messages');
-  chat.scrollTop = chat.scrollHeight;
+  document.getElementById('typing-wrap').classList.add('visible');
+  scrollBottom();
 }
-
 function hideTyping() {
-  document.getElementById('typing-indicator').classList.remove('visible');
+  document.getElementById('typing-wrap').classList.remove('visible');
 }
 
-function restartAnimation() {
-  clearTimeout(animTimer);
-  isPlaying = false;
-  currentIdx = 0;
+function restart() {
+  clearTimeout(timer);
+  playing = false;
+  curIdx  = 0;
   document.getElementById('play-btn').textContent = '▶';
   hideTyping();
-  allNodes.forEach(n => n.classList.remove('visible'));
+  allSteps.forEach(hideStep);
   updateProgress();
   document.getElementById('chat-messages').scrollTop = 0;
 }
 
-function showAllMessages() {
+function showAll() {
   if (!parsedData) { generateChat(); return; }
-  clearTimeout(animTimer);
-  isPlaying = false;
+  clearTimeout(timer);
+  playing = false;
   document.getElementById('play-btn').textContent = '▶';
   hideTyping();
-  const chat = document.getElementById('chat-messages');
-  chat.classList.add('show-all');
-  allNodes.forEach(n => n.classList.add('visible'));
-  currentIdx = allNodes.length;
+  allSteps.forEach(revealStep);
+  curIdx = allSteps.length;
   updateProgress();
-  chat.scrollTop = chat.scrollHeight;
+  scrollBottom();
 }
 
-function updateSpeed(val) {
-  speedValue = parseInt(val, 10);
-  const labels = ['0.5×','0.75×','1×','2×','4×'];
-  document.getElementById('speed-label').textContent = labels[speedValue - 1];
+function setSpeed(val) {
+  speedVal = +val;
+  const labels = ['0.5×','1×','1.5×','2×','3×'];
+  document.getElementById('spd-label').textContent = labels[speedVal - 1];
 }
 
 function updateProgress() {
-  const total = allNodes.length;
-  const cur   = Math.min(currentIdx, total);
-  document.getElementById('progress-fill').style.width =
-    total ? (cur / total * 100) + '%' : '0%';
-  document.getElementById('progress-text').textContent = cur + ' / ' + total;
+  const total = allSteps.length;
+  const cur   = Math.min(curIdx, total);
+  document.getElementById('prog-fill').style.width = total ? (cur / total * 100) + '%' : '0%';
+  document.getElementById('prog-text').textContent  = cur + ' / ' + total;
 }
 
 function seekProgress(e) {
-  if (!parsedData || !allNodes.length) return;
-  const bar  = document.getElementById('progress-bar');
+  if (!parsedData || !allSteps.length) return;
+  const bar  = document.getElementById('prog-bar');
   const frac = e.offsetX / bar.offsetWidth;
-  const idx  = Math.round(frac * allNodes.length);
+  const idx  = Math.round(frac * allSteps.length);
 
-  clearTimeout(animTimer);
-  isPlaying = false;
+  clearTimeout(timer);
+  playing = false;
   document.getElementById('play-btn').textContent = '▶';
   hideTyping();
 
-  // reveal up to idx, hide from idx onward
-  const chat = document.getElementById('chat-messages');
-  chat.classList.remove('show-all');
-  allNodes.forEach((n, i) => {
-    if (i < idx) n.classList.add('visible');
-    else          n.classList.remove('visible');
+  allSteps.forEach((step, i) => {
+    if (i < idx) revealStep(step);
+    else hideStep(step);
   });
-  currentIdx = idx;
+  curIdx = idx;
   updateProgress();
-  chat.scrollTop = chat.scrollHeight;
+  scrollBottom();
+}
+
+/* ================================================================
+   DARK / LIGHT MODE  — with humor
+================================================================ */
+let isLight = false;
+
+const LIGHT_JOKES = [
+  "☀️ {name} switched to Light Mode. The group is collectively reaching for sunglasses 🕶️",
+  "☀️ {name} just turned on Light Mode at midnight. Paramedics have been called.",
+  "☀️ {name} enabled Light Mode. Scientists confirm this is what caused the Big Bang.",
+  "☀️ {name} switched to Light Mode. Dave's retinas have filed a formal complaint.",
+  "☀️ {name} found the brightness slider. Nobody asked.",
+];
+const DARK_JOKES = [
+  "🌑 {name} came crawling back to Dark Mode. Some things are better left in darkness.",
+  "🌑 {name} returned to Dark Mode. The soul is restored. Order is maintained.",
+  "🌑 {name} switched to Dark Mode. Optometrists everywhere rejoice.",
+  "🌑 {name} remembered that eyes are important and switched back to Dark Mode.",
+  "🌑 {name} touched the light and immediately regretted it. Dark Mode resumed.",
+];
+
+function toggleTheme() {
+  isLight = !isLight;
+  document.body.classList.toggle('light', isLight);
+
+  const btn = document.getElementById('theme-btn');
+  btn.textContent = isLight ? '🌑 Dark Mode' : '☀️ Light Mode';
+
+  // Pick a random group member to "blame" for the theme switch
+  const members  = parsedData?.meta?.members ?? ['Dave'];
+  const culprit  = members[Math.floor(Math.random() * members.length)];
+  const jokes    = isLight ? LIGHT_JOKES : DARK_JOKES;
+  const msg      = jokes[Math.floor(Math.random() * jokes.length)].replace('{name}', culprit);
+  showToast(msg);
+}
+
+let toastTimer = null;
+function showToast(msg) {
+  const t = document.getElementById('theme-toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3800);
 }
 
 /* ================================================================
@@ -931,79 +1058,63 @@ function seekProgress(e) {
 ================================================================ */
 function updateClock() {
   const now = new Date();
-  const h = now.getHours().toString().padStart(2,'0');
-  const m = now.getMinutes().toString().padStart(2,'0');
-  document.getElementById('clock').textContent = h + ':' + m;
+  document.getElementById('clock').textContent =
+    now.getHours().toString().padStart(2,'0') + ':' +
+    now.getMinutes().toString().padStart(2,'0');
 }
 setInterval(updateClock, 30000);
 updateClock();
 
 /* ================================================================
-   DOWNLOAD – PNG
+   DOWNLOAD — PNG
 ================================================================ */
 function downloadPNG() {
   if (!parsedData) { alert('Generate the chat first.'); return; }
-
   if (typeof html2canvas === 'undefined') {
-    alert('html2canvas library not loaded. Cannot export PNG.\n\nPlease check your internet connection.');
-    return;
+    alert('html2canvas is not loaded. Check your internet connection.'); return;
   }
+  // Reveal everything for the screenshot
+  const wasShowing = curIdx === allSteps.length;
+  allSteps.forEach(revealStep);
 
-  // temporarily show all messages for the screenshot
-  const chat = document.getElementById('chat-messages');
-  const hadShowAll = chat.classList.contains('show-all');
-  chat.classList.add('show-all');
-  allNodes.forEach(n => n.classList.add('visible'));
-
-  const frame = document.getElementById('phone-frame');
-
-  html2canvas(frame, {
-    backgroundColor: null,
-    scale: 2,
-    useCORS: true,
-    logging: false
+  html2canvas(document.getElementById('phone-frame'), {
+    backgroundColor: null, scale: 2, useCORS: true, logging: false
   }).then(canvas => {
     canvas.toBlob(blob => {
-      const url  = URL.createObjectURL(blob);
-      const a    = document.createElement('a');
-      a.href     = url;
-      a.download = 'whatsapp-chat.png';
-      a.click();
-      URL.revokeObjectURL(url);
-
-      const kb = (blob.size / 1024).toFixed(1);
-      document.getElementById('png-size').textContent = kb + ' KB  (' + blob.size.toLocaleString() + ' bytes)';
+      const url = URL.createObjectURL(blob);
+      const a   = document.createElement('a');
+      a.href = url; a.download = 'whatsapp-chat.png';
+      a.click(); URL.revokeObjectURL(url);
+      document.getElementById('png-size').textContent =
+        (blob.size / 1024).toFixed(1) + ' KB  (' + blob.size.toLocaleString() + ' bytes)';
     }, 'image/png');
 
-    // restore state
-    if (!hadShowAll) {
-      chat.classList.remove('show-all');
-      allNodes.forEach((n, i) => {
-        if (i >= currentIdx) n.classList.remove('visible');
+    if (!wasShowing) {
+      allSteps.forEach((step, i) => {
+        if (i < curIdx) revealStep(step);
+        else hideStep(step);
       });
     }
   });
 }
 
 /* ================================================================
-   DOWNLOAD – TXT
+   DOWNLOAD — TXT
 ================================================================ */
 function downloadTXT() {
   const raw  = document.getElementById('chat-input').value.trim();
   const blob = new Blob([raw], { type: 'text/plain;charset=utf-8' });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
-  a.href     = url;
-  a.download = 'whatsapp-chat.txt';
-  a.click();
-  URL.revokeObjectURL(url);
+  a.href = url; a.download = 'whatsapp-chat.txt';
+  a.click(); URL.revokeObjectURL(url);
   updateTxtSize(raw);
 }
 
 function updateTxtSize(raw) {
   const bytes = new TextEncoder().encode(raw).length;
-  const kb    = (bytes / 1024).toFixed(1);
-  document.getElementById('txt-size').textContent = kb + ' KB  (' + bytes.toLocaleString() + ' bytes)';
+  document.getElementById('txt-size').textContent =
+    (bytes / 1024).toFixed(1) + ' KB  (' + bytes.toLocaleString() + ' bytes)';
 }
 
 /* ================================================================
