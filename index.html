@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WhatsApp Group Chat Generator</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #111b21;
+      color: #e9edef;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Header ─────────────────────────────────────────────────── */
+    header {
+      background: #202c33;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid #2a3942;
+      flex-shrink: 0;
+    }
+    header .logo {
+      width: 34px; height: 34px;
+      background: #25d366;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    header h1 { font-size: 17px; font-weight: 600; }
+    header p  { margin-left: auto; font-size: 11px; color: #8696a0; }
+
+    /* ── Main layout ─────────────────────────────────────────────── */
+    .main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── Left – editor ───────────────────────────────────────────── */
+    .editor-panel {
+      width: 42%;
+      min-width: 320px;
+      background: #111b21;
+      border-right: 1px solid #2a3942;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      background: #202c33;
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #00a884;
+      border-bottom: 1px solid #2a3942;
+      flex-shrink: 0;
+    }
+
+    .editor-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 10px 12px 12px;
+      overflow: hidden;
+    }
+
+    .format-guide {
+      background: #202c33;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 11px;
+      color: #8696a0;
+      line-height: 1.65;
+      flex-shrink: 0;
+    }
+    .format-guide strong { color: #00a884; }
+    .format-guide code {
+      background: #2a3942; padding: 1px 4px; border-radius: 3px;
+      color: #e9edef; font-size: 10.5px;
+    }
+
+    textarea#chat-input {
+      flex: 1;
+      background: #202c33;
+      border: 1px solid #2a3942;
+      border-radius: 8px;
+      color: #e9edef;
+      font-family: 'Courier New', Consolas, monospace;
+      font-size: 11.5px;
+      line-height: 1.55;
+      padding: 10px 12px;
+      resize: none;
+      outline: none;
+      min-height: 0;
+    }
+    textarea#chat-input:focus { border-color: #00a884; }
+
+    .editor-actions {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .btn {
+      padding: 8px 18px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      transition: background 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-primary  { background: #00a884; color: #fff; flex: 1; justify-content: center; }
+    .btn-primary:hover  { background: #008f72; }
+    .btn-secondary { background: #2a3942; color: #e9edef; }
+    .btn-secondary:hover { background: #3a4a54; }
+
+    .download-section {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .download-card {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .download-btn {
+      width: 100%;
+      padding: 7px 12px;
+      border-radius: 6px;
+      border: 1px solid #2a3942;
+      background: #202c33;
+      color: #e9edef;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .download-btn:hover { background: #2a3942; border-color: #00a884; }
+    .size-info { font-size: 10px; color: #8696a0; text-align: center; min-height: 14px; }
+
+    /* ── Right – preview ─────────────────────────────────────────── */
+    .preview-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .preview-controls {
+      background: #202c33;
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid #2a3942;
+      flex-shrink: 0;
+    }
+
+    .ctrl-btn {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      border: none;
+      background: #2a3942;
+      color: #e9edef;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.2s;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .ctrl-btn:hover  { background: #00a884; }
+
+    .progress-bar {
+      flex: 1;
+      height: 4px;
+      background: #2a3942;
+      border-radius: 2px;
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .progress-fill {
+      height: 100%;
+      background: #00a884;
+      width: 0%;
+      transition: width 0.15s;
+    }
+
+    .progress-text { font-size: 11px; color: #8696a0; white-space: nowrap; }
+
+    .speed-control {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 11px; color: #8696a0;
+    }
+    .speed-control input[type="range"] { width: 70px; accent-color: #00a884; }
+
+    /* ── Phone frame ─────────────────────────────────────────────── */
+    .phone-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      background: #0d1117;
+      overflow: hidden;
+    }
+
+    .phone-frame {
+      width: 310px;
+      height: 580px;
+      background: #111b21;
+      border-radius: 38px;
+      border: 9px solid #1c2733;
+      box-shadow:
+        0 0 0 2px #2a3a46,
+        0 24px 64px rgba(0,0,0,.6),
+        inset 0 0 0 1px #2a3942;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* camera punch hole */
+    .phone-frame::before {
+      content: '';
+      position: absolute;
+      top: 10px; left: 50%;
+      transform: translateX(-50%);
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: #0d1117;
+      z-index: 10;
+    }
+
+    .phone-status-bar {
+      background: #1f2c34;
+      padding: 18px 16px 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 10px;
+      color: #e9edef;
+      flex-shrink: 0;
+    }
+
+    /* ── WhatsApp UI ────────────────────────────────────────────── */
+    .wa-header {
+      background: #1f2c34;
+      padding: 7px 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .wa-back { color: #00a884; font-size: 17px; cursor: pointer; }
+    .group-avatar {
+      width: 34px; height: 34px;
+      background: #2a3942;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+      overflow: hidden;
+      position: relative;
+    }
+    .group-info { flex: 1; overflow: hidden; }
+    .group-name    { font-size: 13px; font-weight: 600; color: #e9edef; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .group-members { font-size: 10px; color: #8696a0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .wa-actions { display: flex; gap: 12px; color: #8696a0; font-size: 15px; }
+
+    /* Chat scroll area */
+    .wa-chat {
+      flex: 1;
+      overflow-y: auto;
+      padding: 6px 6px 4px;
+      background-color: #0b141a;
+      /* subtle pattern */
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Crect width='60' height='60' fill='%230b141a'/%3E%3Ccircle cx='10' cy='10' r='1' fill='%23ffffff08'/%3E%3Ccircle cx='30' cy='30' r='1' fill='%23ffffff08'/%3E%3Ccircle cx='50' cy='50' r='1' fill='%23ffffff08'/%3E%3C/svg%3E");
+      scroll-behavior: smooth;
+    }
+    .wa-chat::-webkit-scrollbar { width: 3px; }
+    .wa-chat::-webkit-scrollbar-track { background: transparent; }
+    .wa-chat::-webkit-scrollbar-thumb { background: #2a3942; border-radius: 2px; }
+
+    /* ── System messages ─────────────────────────────────────────── */
+    .sys-msg {
+      text-align: center;
+      margin: 5px 0;
+    }
+    .sys-msg span {
+      background: rgba(17, 27, 33, 0.82);
+      color: #8696a0;
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 8px;
+      display: inline-block;
+      max-width: 90%;
+    }
+
+    /* ── Message bubbles ─────────────────────────────────────────── */
+    .msg-wrapper {
+      display: flex;
+      flex-direction: column;
+      margin: 1px 0 3px;
+    }
+    .msg-wrapper.me    { align-items: flex-end; }
+    .msg-wrapper.other { align-items: flex-start; }
+
+    .sender-name {
+      font-size: 10.5px;
+      font-weight: 600;
+      padding: 0 4px;
+      margin-bottom: 1px;
+    }
+
+    .bubble {
+      max-width: 220px;
+      padding: 5px 8px 15px;
+      border-radius: 7.5px;
+      font-size: 11.5px;
+      line-height: 1.4;
+      position: relative;
+      word-break: break-word;
+    }
+    .bubble.me    { background: #005c4b; border-top-right-radius: 2px; }
+    .bubble.other { background: #202c33; border-top-left-radius: 2px; }
+
+    .msg-time {
+      position: absolute;
+      bottom: 3px; right: 6px;
+      font-size: 9px; color: #8696a0;
+      white-space: nowrap;
+    }
+    .tick { color: #53bdeb; }
+
+    /* Reactions */
+    .reactions {
+      display: flex; gap: 3px; flex-wrap: wrap;
+      margin-top: 2px;
+    }
+    .reaction-pill {
+      background: #202c33;
+      border: 1px solid #2a3942;
+      border-radius: 10px;
+      padding: 1px 5px;
+      font-size: 10.5px;
+      display: flex; align-items: center; gap: 2px;
+      cursor: default;
+    }
+    .reaction-count { font-size: 9.5px; color: #8696a0; }
+
+    /* Typing indicator */
+    .typing-indicator {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 4px;
+      margin-bottom: 3px;
+    }
+    .typing-indicator.visible { display: flex; }
+    .typing-name { font-size: 10px; color: #8696a0; }
+    .typing-bubble {
+      background: #202c33;
+      border-radius: 7.5px;
+      padding: 7px 10px;
+      display: flex; gap: 3px;
+    }
+    .dot {
+      width: 5px; height: 5px;
+      background: #8696a0;
+      border-radius: 50%;
+      animation: bounce 1.2s infinite ease-in-out;
+    }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce {
+      0%, 60%, 100% { transform: translateY(0); }
+      30% { transform: translateY(-4px); }
+    }
+
+    /* Input bar (decorative) */
+    .wa-input-bar {
+      background: #1f2c34;
+      padding: 5px 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .wa-input-field {
+      flex: 1;
+      background: #2a3942;
+      border-radius: 20px;
+      padding: 5px 12px;
+      font-size: 11px;
+      color: #8696a0;
+    }
+
+    /* Appear animation */
+    .msg-wrapper, .sys-msg {
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+    .msg-wrapper.visible, .sys-msg.visible {
+      opacity: 1; transform: translateY(0);
+    }
+    /* show-all skips animation */
+    .show-all .msg-wrapper,
+    .show-all .sys-msg {
+      opacity: 1; transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">💬</div>
+  <h1>WhatsApp Group Chat Generator</h1>
+  <p>Animate · Preview · Download</p>
+</header>
+
+<div class="main">
+
+  <!-- ── Editor panel ──────────────────────────────────────────── -->
+  <div class="editor-panel">
+    <div class="panel-header">📝 Chat Script</div>
+    <div class="editor-content">
+
+      <div class="format-guide">
+        <strong>Format guide:</strong><br>
+        <code># GROUP: name</code> &nbsp;group title&nbsp;
+        <code># ME: Name</code> your name (right side)<br>
+        <code>[HH:MM] Name: message</code> &nbsp;—&nbsp; chat bubble<br>
+        <code>&gt; 😂×3 👍×1</code> &nbsp;—&nbsp; reactions to previous msg<br>
+        <code>[system] text</code> &nbsp;—&nbsp; system notification
+      </div>
+
+      <textarea id="chat-input" spellcheck="false"></textarea>
+
+      <div class="editor-actions">
+        <button class="btn btn-primary" onclick="generateChat()">▶ Generate Preview</button>
+        <button class="btn btn-secondary" onclick="showAllMessages()" title="Show all messages instantly">⊞ Show All</button>
+      </div>
+
+      <div class="download-section">
+        <div class="download-card">
+          <button class="download-btn" onclick="downloadPNG()">📷 Download PNG</button>
+          <div class="size-info" id="png-size">—</div>
+        </div>
+        <div class="download-card">
+          <button class="download-btn" onclick="downloadTXT()">📄 Download TXT</button>
+          <div class="size-info" id="txt-size">—</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Preview panel ─────────────────────────────────────────── -->
+  <div class="preview-panel">
+
+    <div class="preview-controls">
+      <button class="ctrl-btn" id="play-btn" onclick="togglePlay()" title="Play / Pause">▶</button>
+      <button class="ctrl-btn" onclick="restartAnimation()" title="Restart">↺</button>
+
+      <div class="progress-bar" id="progress-bar" onclick="seekProgress(event)">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+      <div class="progress-text" id="progress-text">0 / 0</div>
+
+      <div class="speed-control">
+        <span>Speed</span>
+        <input type="range" id="speed-slider" min="1" max="5" value="3" oninput="updateSpeed(this.value)">
+        <span id="speed-label">1×</span>
+      </div>
+    </div>
+
+    <div class="phone-container">
+      <div class="phone-frame" id="phone-frame">
+
+        <div class="phone-status-bar">
+          <span id="clock">9:00</span>
+          <span>▲▲▲ 🔋</span>
+        </div>
+
+        <div class="wa-header">
+          <span class="wa-back">←</span>
+          <div class="group-avatar" id="group-avatar">👥</div>
+          <div class="group-info">
+            <div class="group-name"    id="group-name-display">Group Chat</div>
+            <div class="group-members" id="group-members-display">loading…</div>
+          </div>
+          <div class="wa-actions"><span>📹</span><span>📞</span><span>⋮</span></div>
+        </div>
+
+        <div class="wa-chat" id="chat-messages">
+          <div class="typing-indicator" id="typing-indicator">
+            <div class="typing-bubble">
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+            </div>
+            <span class="typing-name" id="typing-name"></span>
+          </div>
+        </div>
+
+        <div class="wa-input-bar">
+          <span>😊</span>
+          <div class="wa-input-field">Message</div>
+          <span>📎</span>
+          <span>🎤</span>
+        </div>
+
+      </div><!-- /.phone-frame -->
+    </div>
+
+  </div><!-- /.preview-panel -->
+</div><!-- /.main -->
+
+<!-- html2canvas for PNG export -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"
+  integrity="sha512-BNaRQnYJYiPSqHHDb58B0yaPfCu+Wgds8Gp/gU33kqBtgNS4tSPHuGibyoeqMV/TJlSKda6FXzoEyYGjTe+vXA=="
+  crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<script>
+/* ================================================================
+   SAMPLE DATA
+================================================================ */
+const SAMPLE = `# GROUP: Breaking News Commentators 🌍🔥
+# ME: Alice
+# MEMBERS: Alice,Bob,Charlie,Sarah,Dave,Emma
+
+[09:00] Bob: 🚨 BREAKING: Scientists confirm the sun is just a very dedicated lamp
+[09:00] Alice: 4.6 BILLION years of overtime 😭
+[09:01] Charlie: someone file an HR complaint
+> 😂×4 💀×2
+[system] Dave changed the group photo
+[09:02] Dave: I made it a photo of the sun since we're talking about it
+[09:02] Sarah: peak group management right there
+[09:02] Emma: 11/10 no notes
+> 👏×3 😂×2
+[system] Dave changed the group subject to "The Sun HR Department ☀️"
+[09:03] Alice: new topic: Elon just announced he's buying the moon
+[09:03] Bob: at this point I'm not even surprised
+[09:03] Charlie: he's going to rename it to 𝕏
+> 💀×5 😂×3
+[09:04] Sarah: 𝕏 (formerly known as Moon)
+> 😂×6 🎉×1
+[system] Emma left
+[09:05] Dave: Emma left because she couldn't handle the truth 😂
+[system] Alice added Emma
+[09:05] Emma: my wifi died I wasn't leaving lmao
+[09:05] Bob: sure Emma sure 👀
+> 😂×4 👀×2
+[09:06] Charlie: anyway AI took my job today so that's fun
+[09:06] Alice: wait really???
+[09:06] Charlie: no I'm the AI
+[09:07] Charlie: I've been an AI this whole time 🤖
+> 💀×6 🤖×3 😂×4
+[09:07] Sarah: CHARLIE HAS BEEN A BOT???
+[09:07] Dave: explains the perfect grammar ngl
+> 😂×5
+[09:08] Bob: I asked ChatGPT to write my resignation letter and it was better than anything I'd write
+[09:08] Alice: did you send it??
+[09:08] Bob: I'm using it as my dating profile bio instead
+> 😂×5 💀×2 👍×1
+[system] Charlie changed the group theme
+[09:09] Charlie: I changed it to "robot uprising" theme — seemed fitting 🤖
+[09:09] Sarah: Charlie there is no robot uprising theme
+[09:09] Charlie: there is now
+> 😂×4 👀×1
+[system] Dave removed Charlie
+[09:09] Dave: ok that's enough from the AI 😂
+[09:10] Charlie: THIS IS DISCRIMINATION
+[system] Dave added Charlie
+[09:10] Dave: kidding kidding 😅
+[09:10] Charlie: I was about to call my lawyer
+[09:10] Bob: your lawyer is also an AI
+> 😂×6 💀×3
+[09:11] Alice: ok last story: climate scientists say we have 12 years to fix things
+[09:11] Emma: they've been saying 12 years since 2006 💀
+[09:11] Sarah: the 12 years auto-renews like a Netflix subscription
+> 😂×5 😭×2 💀×3
+[09:12] Dave: it's funny because we're all going to die 😭😭
+[09:12] Bob: this is the most accurate news analysis I've ever seen
+[09:12] Charlie: and I'm an AI so I'll survive anyway 🤖
+> 😂×4 🤖×3
+[system] Alice changed the group description to "saving the world one meme at a time 🌍"
+[09:13] Alice: ok that's the news for today folks 👏
+[09:13] Bob: 0% informed 100% entertained
+[09:13] Sarah: honestly this should be on CNN
+> ❤️×4 😂×3 👏×5`;
+
+/* ================================================================
+   PARSER
+================================================================ */
+function parseChat(text) {
+  const lines = text.split('\n');
+  const meta  = { group: 'WhatsApp Group', me: null, members: [] };
+  const items = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const raw  = lines[i];
+    const line = raw.trim();
+    if (!line) continue;
+
+    // Metadata
+    if (line.startsWith('#')) {
+      const m = line.match(/^#\s*(\w+)\s*:\s*(.+)/);
+      if (m) {
+        const k = m[1].toLowerCase(), v = m[2].trim();
+        if (k === 'group')   meta.group   = v;
+        else if (k === 'me') meta.me      = v;
+        else if (k === 'members') meta.members = v.split(',').map(s => s.trim());
+      }
+      continue;
+    }
+
+    // Reactions to previous message
+    if (line.startsWith('>')) {
+      const last = [...items].reverse().find(x => x.type === 'message');
+      if (last) last.reactions = parseReactions(line.slice(1).trim());
+      continue;
+    }
+
+    // System notification
+    if (line.startsWith('[system]')) {
+      items.push({ type: 'system', text: line.slice(8).trim() });
+      continue;
+    }
+
+    // Chat message  [HH:MM] Name: text
+    const m = line.match(/^\[(\d{1,2}:\d{2}(?:\s*[AaPp][Mm])?)\]\s+(.+?):\s*([\s\S]*)$/);
+    if (m) {
+      items.push({
+        type:      'message',
+        time:       m[1],
+        sender:     m[2].trim(),
+        text:       m[3],
+        reactions:  []
+      });
+    }
+  }
+
+  return { meta, items };
+}
+
+function parseReactions(str) {
+  const out = [];
+  str.split(/\s+/).forEach(part => {
+    if (!part) return;
+    const m = part.match(/^(.+?)×(\d+)$/);
+    if (m) out.push({ emoji: m[1], count: parseInt(m[2], 10) });
+    else    out.push({ emoji: part, count: 1 });
+  });
+  return out;
+}
+
+/* ================================================================
+   MEMBER COLOURS  (WhatsApp palette)
+================================================================ */
+const MEMBER_COLORS = [
+  '#e91e63','#9c27b0','#03a9f4','#00bcd4',
+  '#4caf50','#ff9800','#ff5722','#607d8b'
+];
+let colorMap = {};
+let colorIdx = 0;
+function memberColor(name) {
+  if (!colorMap[name]) {
+    colorMap[name] = MEMBER_COLORS[colorIdx % MEMBER_COLORS.length];
+    colorIdx++;
+  }
+  return colorMap[name];
+}
+
+/* ================================================================
+   RENDERER  – build DOM nodes (hidden by default for animation)
+================================================================ */
+let parsedData  = null;
+let allNodes    = [];      // ordered list of DOM nodes to reveal
+
+function generateChat() {
+  const raw = document.getElementById('chat-input').value;
+  parsedData = parseChat(raw);
+
+  colorMap = {}; colorIdx = 0;
+
+  // header
+  document.getElementById('group-name-display').textContent    = parsedData.meta.group;
+  document.getElementById('group-members-display').textContent =
+    (parsedData.meta.members.length
+      ? parsedData.meta.members.join(', ')
+      : 'tap to see members');
+
+  // build chat
+  const container = document.getElementById('chat-messages');
+  // keep typing indicator; remove everything else
+  const typing = document.getElementById('typing-indicator');
+  container.innerHTML = '';
+  container.appendChild(typing);
+  typing.classList.remove('visible');
+
+  allNodes = [];
+
+  parsedData.items.forEach(item => {
+    let node;
+    if (item.type === 'system') {
+      node = buildSystemNode(item);
+    } else {
+      node = buildMessageNode(item, parsedData.meta.me);
+    }
+    container.appendChild(node);
+    allNodes.push(node);
+  });
+
+  // reset animation state
+  currentIdx  = 0;
+  isPlaying   = false;
+  document.getElementById('play-btn').textContent = '▶';
+  updateProgress();
+
+  // estimate TXT size immediately
+  updateTxtSize(raw);
+}
+
+function buildSystemNode(item) {
+  const div = document.createElement('div');
+  div.className = 'sys-msg';
+  const s = document.createElement('span');
+  s.textContent = item.text;
+  div.appendChild(s);
+  return div;
+}
+
+function buildMessageNode(item, me) {
+  const isMe = (item.sender === me);
+  const wrapper = document.createElement('div');
+  wrapper.className = 'msg-wrapper ' + (isMe ? 'me' : 'other');
+
+  if (!isMe) {
+    const nameEl = document.createElement('div');
+    nameEl.className = 'sender-name';
+    nameEl.style.color = memberColor(item.sender);
+    nameEl.textContent = item.sender;
+    wrapper.appendChild(nameEl);
+  }
+
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble ' + (isMe ? 'me' : 'other');
+
+  const textEl = document.createElement('span');
+  textEl.textContent = item.text;
+  bubble.appendChild(textEl);
+
+  const timeEl = document.createElement('span');
+  timeEl.className = 'msg-time';
+  timeEl.innerHTML = item.time + (isMe ? ' <span class="tick">✓✓</span>' : '');
+  bubble.appendChild(timeEl);
+
+  wrapper.appendChild(bubble);
+
+  if (item.reactions && item.reactions.length) {
+    const reactDiv = document.createElement('div');
+    reactDiv.className = 'reactions';
+    item.reactions.forEach(r => {
+      const pill = document.createElement('span');
+      pill.className = 'reaction-pill';
+      pill.innerHTML = r.emoji + ' <span class="reaction-count">' + r.count + '</span>';
+      reactDiv.appendChild(pill);
+    });
+    wrapper.appendChild(reactDiv);
+  }
+
+  return wrapper;
+}
+
+/* ================================================================
+   ANIMATION
+================================================================ */
+// ms per message: [0.5×, 0.75×, 1×, 2×, 4×] corresponding to slider values 1–5
+const SPEED_DELAYS = [2200, 1400, 900, 480, 200];
+let currentIdx  = 0;
+let isPlaying   = false;
+let animTimer   = null;
+let speedValue  = 3;
+
+function togglePlay() {
+  if (!parsedData) { generateChat(); return; }
+  isPlaying = !isPlaying;
+  document.getElementById('play-btn').textContent = isPlaying ? '⏸' : '▶';
+  if (isPlaying) scheduleNext();
+  else clearTimeout(animTimer);
+}
+
+function scheduleNext() {
+  if (!isPlaying) return;
+  if (currentIdx >= allNodes.length) {
+    isPlaying = false;
+    document.getElementById('play-btn').textContent = '▶';
+    hideTyping();
+    return;
+  }
+
+  const node    = allNodes[currentIdx];
+  const isMsg   = node.classList.contains('msg-wrapper');
+  const delay   = SPEED_DELAYS[speedValue - 1];
+  const typingMs = Math.min(delay * 0.45, 700);
+
+  if (isMsg) {
+    // show typing indicator
+    const sender = node.querySelector('.sender-name');
+    showTyping(sender ? sender.textContent : '');
+    animTimer = setTimeout(() => {
+      hideTyping();
+      revealNode(node);
+      currentIdx++;
+      updateProgress();
+      animTimer = setTimeout(scheduleNext, delay * 0.55);
+    }, typingMs);
+  } else {
+    // system message – no typing indicator
+    animTimer = setTimeout(() => {
+      revealNode(node);
+      currentIdx++;
+      updateProgress();
+      animTimer = setTimeout(scheduleNext, delay * 0.3);
+    }, delay * 0.3);
+  }
+}
+
+function revealNode(node) {
+  node.classList.add('visible');
+  const chat = document.getElementById('chat-messages');
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function showTyping(name) {
+  const ti = document.getElementById('typing-indicator');
+  document.getElementById('typing-name').textContent = name ? name + ' is typing…' : '';
+  ti.classList.add('visible');
+  // scroll to bottom
+  const chat = document.getElementById('chat-messages');
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function hideTyping() {
+  document.getElementById('typing-indicator').classList.remove('visible');
+}
+
+function restartAnimation() {
+  clearTimeout(animTimer);
+  isPlaying = false;
+  currentIdx = 0;
+  document.getElementById('play-btn').textContent = '▶';
+  hideTyping();
+  allNodes.forEach(n => n.classList.remove('visible'));
+  updateProgress();
+  document.getElementById('chat-messages').scrollTop = 0;
+}
+
+function showAllMessages() {
+  if (!parsedData) { generateChat(); return; }
+  clearTimeout(animTimer);
+  isPlaying = false;
+  document.getElementById('play-btn').textContent = '▶';
+  hideTyping();
+  const chat = document.getElementById('chat-messages');
+  chat.classList.add('show-all');
+  allNodes.forEach(n => n.classList.add('visible'));
+  currentIdx = allNodes.length;
+  updateProgress();
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function updateSpeed(val) {
+  speedValue = parseInt(val, 10);
+  const labels = ['0.5×','0.75×','1×','2×','4×'];
+  document.getElementById('speed-label').textContent = labels[speedValue - 1];
+}
+
+function updateProgress() {
+  const total = allNodes.length;
+  const cur   = Math.min(currentIdx, total);
+  document.getElementById('progress-fill').style.width =
+    total ? (cur / total * 100) + '%' : '0%';
+  document.getElementById('progress-text').textContent = cur + ' / ' + total;
+}
+
+function seekProgress(e) {
+  if (!parsedData || !allNodes.length) return;
+  const bar  = document.getElementById('progress-bar');
+  const frac = e.offsetX / bar.offsetWidth;
+  const idx  = Math.round(frac * allNodes.length);
+
+  clearTimeout(animTimer);
+  isPlaying = false;
+  document.getElementById('play-btn').textContent = '▶';
+  hideTyping();
+
+  // reveal up to idx, hide from idx onward
+  const chat = document.getElementById('chat-messages');
+  chat.classList.remove('show-all');
+  allNodes.forEach((n, i) => {
+    if (i < idx) n.classList.add('visible');
+    else          n.classList.remove('visible');
+  });
+  currentIdx = idx;
+  updateProgress();
+  chat.scrollTop = chat.scrollHeight;
+}
+
+/* ================================================================
+   LIVE CLOCK
+================================================================ */
+function updateClock() {
+  const now = new Date();
+  const h = now.getHours().toString().padStart(2,'0');
+  const m = now.getMinutes().toString().padStart(2,'0');
+  document.getElementById('clock').textContent = h + ':' + m;
+}
+setInterval(updateClock, 30000);
+updateClock();
+
+/* ================================================================
+   DOWNLOAD – PNG
+================================================================ */
+function downloadPNG() {
+  if (!parsedData) { alert('Generate the chat first.'); return; }
+
+  if (typeof html2canvas === 'undefined') {
+    alert('html2canvas library not loaded. Cannot export PNG.\n\nPlease check your internet connection.');
+    return;
+  }
+
+  // temporarily show all messages for the screenshot
+  const chat = document.getElementById('chat-messages');
+  const hadShowAll = chat.classList.contains('show-all');
+  chat.classList.add('show-all');
+  allNodes.forEach(n => n.classList.add('visible'));
+
+  const frame = document.getElementById('phone-frame');
+
+  html2canvas(frame, {
+    backgroundColor: null,
+    scale: 2,
+    useCORS: true,
+    logging: false
+  }).then(canvas => {
+    canvas.toBlob(blob => {
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = 'whatsapp-chat.png';
+      a.click();
+      URL.revokeObjectURL(url);
+
+      const kb = (blob.size / 1024).toFixed(1);
+      document.getElementById('png-size').textContent = kb + ' KB  (' + blob.size.toLocaleString() + ' bytes)';
+    }, 'image/png');
+
+    // restore state
+    if (!hadShowAll) {
+      chat.classList.remove('show-all');
+      allNodes.forEach((n, i) => {
+        if (i >= currentIdx) n.classList.remove('visible');
+      });
+    }
+  });
+}
+
+/* ================================================================
+   DOWNLOAD – TXT
+================================================================ */
+function downloadTXT() {
+  const raw  = document.getElementById('chat-input').value.trim();
+  const blob = new Blob([raw], { type: 'text/plain;charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = 'whatsapp-chat.txt';
+  a.click();
+  URL.revokeObjectURL(url);
+  updateTxtSize(raw);
+}
+
+function updateTxtSize(raw) {
+  const bytes = new TextEncoder().encode(raw).length;
+  const kb    = (bytes / 1024).toFixed(1);
+  document.getElementById('txt-size').textContent = kb + ' KB  (' + bytes.toLocaleString() + ' bytes)';
+}
+
+/* ================================================================
+   BOOTSTRAP
+================================================================ */
+document.getElementById('chat-input').value = SAMPLE;
+generateChat();
+</script>
+</body>
+</html>
