@@ -312,17 +312,14 @@
     .wa-chat::-webkit-scrollbar { width: 2px; }
     .wa-chat::-webkit-scrollbar-thumb { background: var(--border); border-radius: 1px; }
 
-    /* ── Bottom-anchored inner container ─────────────────────────── */
+    /* ── Top-anchored inner container ────────────────────────────── */
     /*
-      min-height: 100% ensures that even with few messages the content
-      fills the scroll container so justify-content: flex-end pushes
-      everything to the bottom of the visible area.
-      When messages overflow, chat-inner grows naturally and wa-chat scrolls.
+      Messages flow naturally top-to-bottom.  When they overflow wa-chat
+      scrolls, and scrollBottom() keeps the latest message in view.
     */
     .chat-inner {
-      min-height: 100%;
       display: flex; flex-direction: column;
-      justify-content: flex-end;
+      justify-content: flex-start;
       padding: 6px 5px 3px;
       gap: 1px;
     }
@@ -872,11 +869,9 @@ function generateChat() {
   parsedData.items.forEach(item => {
     if (item.type === 'system') {
       const node = buildSystemNode(item);
-      inner.insertBefore(node, typing);   // insert before typing indicator
       allSteps.push({ kind: 'sys', node });
     } else {
       const { wrapper, pills } = buildMessageNode(item, parsedData.meta.me);
-      inner.insertBefore(wrapper, typing);
       allSteps.push({ kind: 'msg', node: wrapper });
       // Each reaction pill is its own animation step
       pills.forEach(pill => allSteps.push({ kind: 'reaction', pill }));
@@ -885,11 +880,10 @@ function generateChat() {
 
   curIdx  = 0; playing = false;
   document.getElementById('play-btn').textContent = '▶';
-  allSteps.forEach(revealStep);
-  curIdx = allSteps.length;
   updateProgress();
-  scrollBottom();
   updateTxtSize(raw);
+  // Auto-start animation so the first message appears immediately
+  togglePlay();
 }
 
 function buildSystemNode(item) {
@@ -1026,6 +1020,11 @@ function revealStep(step) {
   if (step.kind === 'reaction') {
     step.pill.classList.add('visible');
   } else {
+    if (!step.node.parentElement) {
+      const inner  = document.getElementById('chat-inner');
+      const typing = document.getElementById('typing-wrap');
+      inner.insertBefore(step.node, typing);
+    }
     step.node.classList.add('visible');
   }
   scrollBottom();
@@ -1033,7 +1032,10 @@ function revealStep(step) {
 
 function hideStep(step) {
   if (step.kind === 'reaction') step.pill.classList.remove('visible');
-  else step.node.classList.remove('visible');
+  else {
+    step.node.classList.remove('visible');
+    if (step.node.parentElement) step.node.remove();
+  }
 }
 
 function scrollBottom() {
