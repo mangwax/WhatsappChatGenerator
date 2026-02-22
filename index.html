@@ -885,7 +885,10 @@ function generateChat() {
 
   curIdx  = 0; playing = false;
   document.getElementById('play-btn').textContent = '▶';
+  allSteps.forEach(revealStep);
+  curIdx = allSteps.length;
   updateProgress();
+  scrollBottom();
   updateTxtSize(raw);
 }
 
