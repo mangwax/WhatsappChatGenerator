@@ -23,7 +23,7 @@
       --wa-hdr:        #1f2c34;
       --chat-bg:       #0b141a;
       --bubble-me:     #005c4b;
-      --bubble-other:  #202c33;
+      --bubble-other:  color-mix(in srgb, var(--accent) 20%, var(--chat-bg));
       --input-bar:     #1f2c34;
       --input-field:   #2a3942;
       --sys-bg:        rgba(11,20,26,.88);
@@ -47,7 +47,7 @@
       --wa-hdr:        #008069;
       --chat-bg:       #efeae2;
       --bubble-me:     #d9fdd3;
-      --bubble-other:  #fff;
+      --bubble-other:  color-mix(in srgb, var(--accent) 20%, var(--chat-bg));
       --input-bar:     #f0f2f5;
       --input-field:   #fff;
       --sys-bg:        rgba(220,210,200,.92);
@@ -1120,10 +1120,8 @@ function scheduleNext() {
       if (next && next.kind === 'msg') {
         revealStep(next);
         curIdx++; updateProgress();
-        timer = setTimeout(scheduleNext, delay * 0.5);
-      } else {
-        timer = setTimeout(scheduleNext, 50);
       }
+      timer = setTimeout(scheduleNext, 0);
     }, Math.min(step.durationMs, MAX_TYPING_MS));
 
   } else if (step.kind === 'sys') {
