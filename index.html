@@ -362,6 +362,7 @@
 
     .bubble {
       max-width: 215px;
+      min-width: 72px;
       padding: 5px 8px 15px;
       border-radius: 8px;
       font-size: 11px; line-height: 1.45;
@@ -568,11 +569,11 @@
         <strong>Format guide:</strong><br>
         <code># GROUP: name</code>&nbsp;group title &nbsp;
         <code># ME: Name</code>&nbsp;your name (right side)<br>
-        <code># MEMBERS: A,B,C</code>&nbsp;member list &nbsp;
-        <code># TYPING: yes</code>&nbsp;show typing dots (humor option)<br>
+        <code># MEMBERS: A,B,C</code>&nbsp;member list<br>
         <code>[HH:MM] Name: message</code>&nbsp;—&nbsp;chat bubble<br>
         <code>[HH:MM] Name: &gt;&gt;Q.Name: quoted | reply text</code>&nbsp;—&nbsp;reply<br>
         <code>&gt; Bob:😂 Sarah:💀</code>&nbsp;—&nbsp;reactions (name:emoji)<br>
+        <code>[typing] Name (3s)</code>&nbsp;—&nbsp;show typing dots for Name for 3 s before next message<br>
         <code>[system] text</code>&nbsp;—&nbsp;system event<br>
         <em>System examples:</em>&nbsp;
         <code>[system] Dave created this group</code>&nbsp;
@@ -709,12 +710,13 @@
 const SAMPLE = `# GROUP: Breaking News Commentators 🌍🔥
 # ME: Alice
 # MEMBERS: Alice,Bob,Charlie,Sarah,Dave,Emma
-# TYPING: yes
 
+[typing] Bob (2s)
 [09:00] Bob: 🚨 BREAKING: Scientists confirm the sun is just a very dedicated lamp
 [09:00] Alice: wait
 [09:00] Alice: so it's been clocking in every single morning for 4.6 BILLION years
 [09:01] Alice: and we never even said thank you??
+[typing] Charlie (1.5s)
 [09:01] Charlie: someone file an HR complaint immediately
 > Bob:😂 Sarah:😂 Dave:💀 Emma:😂
 [system] Dave changed the group photo
@@ -728,6 +730,7 @@ const SAMPLE = `# GROUP: Breaking News Commentators 🌍🔥
 [09:03] Charlie: the moon will be renamed 𝕏
 [09:03] Sarah: and he'll charge $8/month to see the full moon
 > Bob:💀 Alice:😂 Dave:💀 Emma:😂 Charlie:😂
+[typing] Emma (2s)
 [09:04] Emma: 𝕏 (formerly known as Moon)
 > Alice:😂 Bob:😂 Dave:😂 Sarah:😂 Charlie:🎉
 [system] Emma left
@@ -739,6 +742,7 @@ const SAMPLE = `# GROUP: Breaking News Commentators 🌍🔥
 [09:06] Charlie: anyway AI took my job today so that's fun
 [09:06] Alice: wait WHAT
 [09:06] Charlie: jk
+[typing] Charlie (3s)
 [09:06] Charlie: I AM the AI
 [09:07] Charlie: I've been an AI this whole time 🤖
 > Bob:💀 Sarah:💀 Alice:💀 Dave:💀 Emma:🤖
@@ -748,6 +752,7 @@ const SAMPLE = `# GROUP: Breaking News Commentators 🌍🔥
 [09:08] Bob: so I used ChatGPT to write my resignation letter
 [09:08] Bob: it was genuinely better than anything I could write
 [09:08] Alice: did you send it??
+[typing] Bob (2s)
 [09:08] Bob: using it as my dating bio instead
 > Alice:😂 Sarah:😂 Charlie:😂 Dave:💀 Emma:👍
 [system] Charlie changed the group theme to red
@@ -783,7 +788,7 @@ const SAMPLE = `# GROUP: Breaking News Commentators 🌍🔥
 ================================================================ */
 function parseChat(text) {
   const lines = text.split('\n');
-  const meta  = { group: 'WhatsApp Group', me: null, members: [], typing: false };
+  const meta  = { group: 'WhatsApp Group', me: null, members: [] };
   const items = [];
 
   for (const raw of lines) {
@@ -798,7 +803,6 @@ function parseChat(text) {
         if      (k === 'group')   meta.group   = v;
         else if (k === 'me')      meta.me      = v;
         else if (k === 'members') meta.members = v.split(',').map(s => s.trim());
-        else if (k === 'typing')  meta.typing  = (v.toLowerCase() === 'yes');
       }
       continue;
     }
@@ -807,6 +811,18 @@ function parseChat(text) {
     if (line.startsWith('>')) {
       const last = [...items].reverse().find(x => x.type === 'message');
       if (last) last.reactions = parseReactions(line.slice(1).trim());
+      continue;
+    }
+
+    // Typing indicator  [typing] Name (Xs)
+    if (line.startsWith('[typing]')) {
+      const tm = line.match(/^\[typing\]\s+(.+?)\s*\((\d+(?:\.\d+)?)\s*(s|ms|sec|secs|seconds?)?\s*\)/i);
+      if (tm) {
+        const num = parseFloat(tm[2]);
+        const unit = (tm[3] || 's').toLowerCase();
+        const durationMs = unit === 'ms' ? num : num * 1000;
+        items.push({ type: 'typing', sender: tm[1].trim(), durationMs });
+      }
       continue;
     }
 
@@ -962,6 +978,8 @@ let speedVal   = 3;
 // Curated per-event delays (ms) for slider positions 1–5 (slowest → fastest).
 // Labels shown: 0.5× 1× 1.5× 2× 3× — relative to the default position (3 = 1800 ms).
 const SPEED_MS = [4500, 2800, 1800, 900, 350];
+// Maximum duration (ms) a scripted typing indicator is allowed to run.
+const MAX_TYPING_MS = 8000;
 
 /* ================================================================
    RENDER
@@ -987,6 +1005,8 @@ function generateChat() {
     if (item.type === 'system') {
       const node = buildSystemNode(item);
       allSteps.push({ kind: 'sys', node, sideEffect: item.sideEffect || null });
+    } else if (item.type === 'typing') {
+      allSteps.push({ kind: 'typing', sender: item.sender, durationMs: item.durationMs });
     } else {
       const { wrapper, pills } = buildMessageNode(item, parsedData.meta.me);
       allSteps.push({ kind: 'msg', node: wrapper });
@@ -1103,25 +1123,21 @@ function scheduleNext() {
   const delay = SPEED_MS[speedVal - 1];
 
   if (step.kind === 'msg') {
-    if (parsedData.meta.typing) {
-      // Show typing indicator first, then reveal message (humor option)
-      const senderEl = step.node.querySelector('.sender-name');
-      showTyping(senderEl ? senderEl.textContent : '');
-      const typingMs = Math.min(delay * 0.5, 1100);
-      timer = setTimeout(() => {
-        hideTyping();
-        revealStep(step);
-        curIdx++; updateProgress();
-        timer = setTimeout(scheduleNext, delay * 0.5);
-      }, typingMs);
-    } else {
-      // Reveal message directly without typing dots
-      timer = setTimeout(() => {
-        revealStep(step);
-        curIdx++; updateProgress();
-        timer = setTimeout(scheduleNext, delay * 0.5);
-      }, delay * 0.5);
-    }
+    // Reveal message directly — typing dots only appear via explicit [typing] steps
+    timer = setTimeout(() => {
+      revealStep(step);
+      curIdx++; updateProgress();
+      timer = setTimeout(scheduleNext, delay * 0.5);
+    }, delay * 0.5);
+
+  } else if (step.kind === 'typing') {
+    // Show typing indicator for the specified duration, then advance
+    showTyping(step.sender);
+    timer = setTimeout(() => {
+      hideTyping();
+      curIdx++; updateProgress();
+      timer = setTimeout(scheduleNext, 50);
+    }, Math.min(step.durationMs, MAX_TYPING_MS));
 
   } else if (step.kind === 'sys') {
     // System messages appear with a shorter pause
@@ -1143,6 +1159,7 @@ function scheduleNext() {
 }
 
 function revealStep(step) {
+  if (step.kind === 'typing') return; // timing-only step; no DOM reveal needed
   if (step.kind === 'reaction') {
     step.pill.classList.add('visible');
   } else {
@@ -1151,6 +1168,16 @@ function revealStep(step) {
       const typing = document.getElementById('typing-wrap');
       inner.insertBefore(step.node, typing);
     }
+    // Snapshot bubble background at reveal time so later theme changes don't
+    // retroactively recolour bubbles that were already "sent".
+    if (step.kind === 'msg') {
+      const bubble = step.node.querySelector('.bubble');
+      if (bubble) {
+        const prop  = bubble.classList.contains('me') ? '--bubble-me' : '--bubble-other';
+        const color = getComputedStyle(document.body).getPropertyValue(prop).trim();
+        if (color) bubble.style.background = color;
+      }
+    }
     step.node.classList.add('visible');
     if (step.sideEffect) applySideEffect(step.sideEffect);
   }
@@ -1158,10 +1185,15 @@ function revealStep(step) {
 }
 
 function hideStep(step) {
+  if (step.kind === 'typing') return;
   if (step.kind === 'reaction') step.pill.classList.remove('visible');
   else {
     step.node.classList.remove('visible');
     if (step.node.parentElement) step.node.remove();
+    // Clear any snapshotted inline background so the CSS variable is used
+    // correctly if this bubble is re-revealed after a restart.
+    const bubble = step.node.querySelector('.bubble');
+    if (bubble) bubble.style.background = '';
   }
 }
 
