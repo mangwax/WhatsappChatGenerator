@@ -213,50 +213,31 @@
       padding: 12px; background: #080d11; overflow: hidden;
     }
 
-    /* ── iPhone-style wrapper (side buttons via pseudo-elements) ─── */
+    /* ── iPhone-style wrapper ────────────────────────────────────── */
     .phone-wrap { position: relative; flex-shrink: 0; }
 
-    /* Mute + volume buttons on left */
-    .phone-wrap::before {
-      content: '';
-      position: absolute; left: -5px; top: 100px; z-index: 1;
-      width: 4px; height: 26px;
-      background: var(--phone-rim);
-      border-radius: 2px 0 0 2px;
-      box-shadow: 0 -44px 0 var(--phone-rim), 0 46px 0 var(--phone-rim);
-    }
-    /* Power button on right */
-    .phone-wrap::after {
-      content: '';
-      position: absolute; right: -5px; top: 130px; z-index: 1;
-      width: 4px; height: 58px;
-      background: var(--phone-rim);
-      border-radius: 0 2px 2px 0;
-    }
+    /* Side buttons removed — screenshot look has no physical shell */
+    .phone-wrap::before, .phone-wrap::after { display: none; }
 
-    /* ── Phone outer frame (titanium) ────────────────────────────── */
+    /* ── Phone outer frame — transparent shell ───────────────────── */
     .phone-frame {
       width: 320px; height: 652px;
-      background: var(--phone-outer);
-      border-radius: 52px;
-      padding: 11px;
-      box-shadow:
-        0 0 0 1px rgba(255,255,255,.10),
-        0 0 0 2px rgba(0,0,0,.5),
-        0 28px 70px rgba(0,0,0,.75),
-        inset 0 0 0 1px rgba(255,255,255,.05);
+      background: transparent;
+      border-radius: 0;
+      padding: 0;
+      box-shadow: none;
       display: flex; flex-direction: column;
-      transition: background .35s;
     }
 
-    /* ── Phone inner screen ──────────────────────────────────────── */
+    /* ── Phone inner screen — screenshot style ───────────────────── */
     .phone-screen {
       flex: 1;
-      border-radius: 43px;
+      border-radius: 52px;
       overflow: hidden;
       display: flex; flex-direction: column;
       position: relative;
       background: var(--wa-hdr);
+      box-shadow: 0 8px 32px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.08);
       transition: background .35s;
     }
 
@@ -527,17 +508,15 @@
 
     /* ── Phone shape variants ────────────────────────────────────── */
     .phone-wrap[data-ar="square"] .phone-frame {
-      width: 302px; height: 302px; border-radius: 30px;
+      width: 302px; height: 302px;
     }
-    .phone-wrap[data-ar="square"] .phone-frame .phone-screen { border-radius: 22px; }
+    .phone-wrap[data-ar="square"] .phone-frame .phone-screen { border-radius: 30px; }
     .phone-wrap[data-ar="landscape"] .phone-frame {
-      width: 580px; height: 320px; border-radius: 30px;
+      width: 580px; height: 320px;
     }
-    .phone-wrap[data-ar="landscape"] .phone-frame .phone-screen { border-radius: 22px; }
+    .phone-wrap[data-ar="landscape"] .phone-frame .phone-screen { border-radius: 30px; }
     .phone-wrap[data-ar="landscape"] .phone-frame .dynamic-island { width: 90px; height: 24px; top: 8px; }
     .phone-wrap[data-ar="landscape"] .phone-frame .status-bar { height: 36px; }
-    .phone-wrap[data-ar="landscape"]::before,
-    .phone-wrap[data-ar="landscape"]::after { display: none; }
     .phone-wrap[data-ar="landscape"] .bubble { max-width: 380px; }
 
     /* ── Recording indicator ─────────────────────────────────────── */
@@ -1168,16 +1147,6 @@ function revealStep(step) {
       const typing = document.getElementById('typing-wrap');
       inner.insertBefore(step.node, typing);
     }
-    // Snapshot bubble background at reveal time so later theme changes don't
-    // retroactively recolour bubbles that were already "sent".
-    if (step.kind === 'msg') {
-      const bubble = step.node.querySelector('.bubble');
-      if (bubble) {
-        const prop  = bubble.classList.contains('me') ? '--bubble-me' : '--bubble-other';
-        const color = getComputedStyle(document.body).getPropertyValue(prop).trim();
-        if (color) bubble.style.background = color;
-      }
-    }
     step.node.classList.add('visible');
     if (step.sideEffect) applySideEffect(step.sideEffect);
   }
@@ -1190,10 +1159,6 @@ function hideStep(step) {
   else {
     step.node.classList.remove('visible');
     if (step.node.parentElement) step.node.remove();
-    // Clear any snapshotted inline background so the CSS variable is used
-    // correctly if this bubble is re-revealed after a restart.
-    const bubble = step.node.querySelector('.bubble');
-    if (bubble) bubble.style.background = '';
   }
 }
 
