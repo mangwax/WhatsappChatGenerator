@@ -312,14 +312,16 @@
     .wa-chat::-webkit-scrollbar { width: 2px; }
     .wa-chat::-webkit-scrollbar-thumb { background: var(--border); border-radius: 1px; }
 
-    /* ── Top-anchored inner container ────────────────────────────── */
+    /* ── Bottom-anchored inner container ────────────────────────── */
     /*
-      Messages flow naturally top-to-bottom.  When they overflow wa-chat
-      scrolls, and scrollBottom() keeps the latest message in view.
+      min-height:100% lets a short conversation sit at the bottom of
+      wa-chat; once content overflows, wa-chat scrolls normally and
+      scrollBottom() keeps the latest message in view.
     */
     .chat-inner {
       display: flex; flex-direction: column;
-      justify-content: flex-start;
+      justify-content: flex-end;
+      min-height: 100%;
       padding: 6px 5px 3px;
       gap: 1px;
     }
@@ -467,6 +469,36 @@
     }
     .theme-toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
+    /* ── Group theme colour overrides ───────────────────────────── */
+    body.theme-red {
+      --wa-hdr:      #b71c1c;
+      --bubble-me:   #7f0000;
+      --accent:      #e53935;
+      --accent-h:    #c62828;
+      --tick:        #ef9a9a;
+    }
+    body.light.theme-red {
+      --wa-hdr:      #e53935;
+      --bubble-me:   #ffcdd2;
+      --accent:      #c62828;
+      --accent-h:    #b71c1c;
+      --txt-bubble:  #111b21;
+    }
+    body.theme-blue {
+      --wa-hdr:      #1565c0;
+      --bubble-me:   #0d47a1;
+      --accent:      #1976d2;
+      --accent-h:    #1565c0;
+      --tick:        #90caf9;
+    }
+    body.light.theme-blue {
+      --wa-hdr:      #1976d2;
+      --bubble-me:   #bbdefb;
+      --accent:      #1565c0;
+      --accent-h:    #0d47a1;
+      --txt-bubble:  #111b21;
+    }
+
     /* ── Reply quote inside bubble ──────────────────────────────── */
     .reply-quote {
       background: rgba(0,0,0,.14);
@@ -536,7 +568,8 @@
         <strong>Format guide:</strong><br>
         <code># GROUP: name</code>&nbsp;group title &nbsp;
         <code># ME: Name</code>&nbsp;your name (right side)<br>
-        <code># MEMBERS: A,B,C</code>&nbsp;member list<br>
+        <code># MEMBERS: A,B,C</code>&nbsp;member list &nbsp;
+        <code># TYPING: yes</code>&nbsp;show typing dots (humor option)<br>
         <code>[HH:MM] Name: message</code>&nbsp;—&nbsp;chat bubble<br>
         <code>[HH:MM] Name: &gt;&gt;Q.Name: quoted | reply text</code>&nbsp;—&nbsp;reply<br>
         <code>&gt; Bob:😂 Sarah:💀</code>&nbsp;—&nbsp;reactions (name:emoji)<br>
@@ -551,7 +584,7 @@
         <code>[system] Dave changed the group icon</code>&nbsp;
         <code>[system] Alice changed the group subject to "Name"</code>&nbsp;
         <code>[system] Bob changed the group description to "..."</code>&nbsp;
-        <code>[system] Charlie changed the group theme</code>&nbsp;
+        <code>[system] Charlie changed the group theme to red</code>&nbsp;(or&nbsp;<code>blue</code>)<br>
         <code>[system] Alice made Bob an admin</code>
       </div>
 
@@ -676,6 +709,7 @@
 const SAMPLE = `# GROUP: Breaking News Commentators 🌍🔥
 # ME: Alice
 # MEMBERS: Alice,Bob,Charlie,Sarah,Dave,Emma
+# TYPING: yes
 
 [09:00] Bob: 🚨 BREAKING: Scientists confirm the sun is just a very dedicated lamp
 [09:00] Alice: wait
@@ -716,8 +750,8 @@ const SAMPLE = `# GROUP: Breaking News Commentators 🌍🔥
 [09:08] Alice: did you send it??
 [09:08] Bob: using it as my dating bio instead
 > Alice:😂 Sarah:😂 Charlie:😂 Dave:💀 Emma:👍
-[system] Charlie changed the group theme
-[09:09] Charlie: changed the theme to "robot uprising" 🤖 seemed fitting
+[system] Charlie changed the group theme to red
+[09:09] Charlie: changed the theme to red 🤖 seemed fitting
 [09:09] Sarah: >>Charlie: changed the theme to "robot uprising" 🤖 seemed fitting | Charlie there is no robot uprising theme
 [09:09] Charlie: there is now
 > Alice:😂 Dave:😂 Emma:👀
@@ -749,7 +783,7 @@ const SAMPLE = `# GROUP: Breaking News Commentators 🌍🔥
 ================================================================ */
 function parseChat(text) {
   const lines = text.split('\n');
-  const meta  = { group: 'WhatsApp Group', me: null, members: [] };
+  const meta  = { group: 'WhatsApp Group', me: null, members: [], typing: false };
   const items = [];
 
   for (const raw of lines) {
@@ -764,6 +798,7 @@ function parseChat(text) {
         if      (k === 'group')   meta.group   = v;
         else if (k === 'me')      meta.me      = v;
         else if (k === 'members') meta.members = v.split(',').map(s => s.trim());
+        else if (k === 'typing')  meta.typing  = (v.toLowerCase() === 'yes');
       }
       continue;
     }
@@ -777,7 +812,8 @@ function parseChat(text) {
 
     // System notification
     if (line.startsWith('[system]')) {
-      items.push({ type: 'system', text: line.slice(8).trim() });
+      const sysText = line.slice(8).trim();
+      items.push({ type: 'system', text: sysText, sideEffect: parseSideEffect(sysText) });
       continue;
     }
 
@@ -816,6 +852,40 @@ function parseReactions(str) {
 }
 
 /* ================================================================
+   SIDE-EFFECT PARSER  — extracts live-UI changes from system lines
+================================================================ */
+function parseSideEffect(text) {
+  // Theme colour: "X changed the group theme to red"
+  const themeM = text.match(/changed the group theme to (\w+)/i);
+  if (themeM) return { type: 'theme', color: themeM[1].toLowerCase() };
+
+  // Group name: "X changed the group subject to "Name""
+  const nameM = text.match(/changed the group subject to (.+)$/i);
+  if (nameM) return { type: 'name', value: nameM[1].trim().replace(/^["\u201C\u201D']|["\u201C\u201D']$/g, '') };
+
+  // Group description: "X changed the group description to "...""
+  const descM = text.match(/changed the group description to (.+)$/i);
+  if (descM) return { type: 'description', value: descM[1].trim().replace(/^["\u201C\u201D']|["\u201C\u201D']$/g, '') };
+
+  // Member left: "X left"
+  const leaveM = text.match(/^(.+) left$/i);
+  if (leaveM) return { type: 'members_remove', member: leaveM[1].trim() };
+
+  // Member removed: "X removed Y"
+  const removeM = text.match(/^(.+?) removed (.+)$/i);
+  if (removeM) return { type: 'members_remove', member: removeM[2].trim() };
+
+  // Member added: "X added Y" (Y may be comma-separated)
+  const addM = text.match(/^(.+?) added (.+)$/i);
+  if (addM) {
+    const names = addM[2].split(/,\s*/).map(s => s.trim()).filter(Boolean);
+    return { type: 'members_add', names };
+  }
+
+  return null;
+}
+
+/* ================================================================
    MEMBER COLOURS
 ================================================================ */
 const PALETTE = ['#e91e63','#9c27b0','#03a9f4','#00bcd4','#4caf50','#ff9800','#ff5722','#607d8b'];
@@ -826,10 +896,60 @@ function memberColor(name) {
 }
 
 /* ================================================================
+   GROUP STATE  — tracks live header changes during playback
+================================================================ */
+let currentGroupState = { name: '', members: [], theme: null };
+
+function initGroupState(meta) {
+  currentGroupState.name    = meta.group;
+  currentGroupState.members = [...meta.members];
+  currentGroupState.theme   = null;
+  applyGroupState();
+}
+
+function applyGroupState() {
+  document.getElementById('grp-name').textContent = currentGroupState.name;
+  document.getElementById('grp-members').textContent =
+    currentGroupState.members.length
+      ? currentGroupState.members.join(', ')
+      : 'tap to see members';
+  document.body.classList.remove('theme-red', 'theme-blue');
+  if (currentGroupState.theme) document.body.classList.add('theme-' + currentGroupState.theme);
+}
+
+function applySideEffect(effect) {
+  if (!effect) return;
+  switch (effect.type) {
+    case 'name':
+      currentGroupState.name = effect.value;
+      applyGroupState();
+      break;
+    case 'description':
+      // Show description in the subtitle area directly
+      document.getElementById('grp-members').textContent = effect.value;
+      break;
+    case 'theme':
+      currentGroupState.theme = effect.color;
+      applyGroupState();
+      break;
+    case 'members_add':
+      effect.names.forEach(n => {
+        if (!currentGroupState.members.includes(n)) currentGroupState.members.push(n);
+      });
+      applyGroupState();
+      break;
+    case 'members_remove':
+      currentGroupState.members = currentGroupState.members.filter(m => m !== effect.member);
+      applyGroupState();
+      break;
+  }
+}
+
+/* ================================================================
    ANIMATION STATE
    allSteps is an ordered array of animation events:
      { kind:'msg',      node: DOMElement }
-     { kind:'sys',      node: DOMElement }
+     { kind:'sys',      node: DOMElement, sideEffect: object|null }
      { kind:'reaction', pill: DOMElement }
 ================================================================ */
 let parsedData = null;
@@ -851,11 +971,8 @@ function generateChat() {
   parsedData  = parseChat(raw);
   colorMap    = {}; colorIdx = 0;
 
-  document.getElementById('grp-name').textContent    = parsedData.meta.group;
-  document.getElementById('grp-members').textContent =
-    parsedData.meta.members.length
-      ? parsedData.meta.members.join(', ')
-      : 'tap to see members';
+  // Initialise header + live group state
+  initGroupState(parsedData.meta);
 
   // Reset the inner container — keep the typing indicator as the last child
   const inner  = document.getElementById('chat-inner');
@@ -869,7 +986,7 @@ function generateChat() {
   parsedData.items.forEach(item => {
     if (item.type === 'system') {
       const node = buildSystemNode(item);
-      allSteps.push({ kind: 'sys', node });
+      allSteps.push({ kind: 'sys', node, sideEffect: item.sideEffect || null });
     } else {
       const { wrapper, pills } = buildMessageNode(item, parsedData.meta.me);
       allSteps.push({ kind: 'msg', node: wrapper });
@@ -986,16 +1103,25 @@ function scheduleNext() {
   const delay = SPEED_MS[speedVal - 1];
 
   if (step.kind === 'msg') {
-    // Show typing indicator first, then reveal message
-    const senderEl = step.node.querySelector('.sender-name');
-    showTyping(senderEl ? senderEl.textContent : '');
-    const typingMs = Math.min(delay * 0.5, 1100);
-    timer = setTimeout(() => {
-      hideTyping();
-      revealStep(step);
-      curIdx++; updateProgress();
-      timer = setTimeout(scheduleNext, delay * 0.5);
-    }, typingMs);
+    if (parsedData.meta.typing) {
+      // Show typing indicator first, then reveal message (humor option)
+      const senderEl = step.node.querySelector('.sender-name');
+      showTyping(senderEl ? senderEl.textContent : '');
+      const typingMs = Math.min(delay * 0.5, 1100);
+      timer = setTimeout(() => {
+        hideTyping();
+        revealStep(step);
+        curIdx++; updateProgress();
+        timer = setTimeout(scheduleNext, delay * 0.5);
+      }, typingMs);
+    } else {
+      // Reveal message directly without typing dots
+      timer = setTimeout(() => {
+        revealStep(step);
+        curIdx++; updateProgress();
+        timer = setTimeout(scheduleNext, delay * 0.5);
+      }, delay * 0.5);
+    }
 
   } else if (step.kind === 'sys') {
     // System messages appear with a shorter pause
@@ -1026,6 +1152,7 @@ function revealStep(step) {
       inner.insertBefore(step.node, typing);
     }
     step.node.classList.add('visible');
+    if (step.sideEffect) applySideEffect(step.sideEffect);
   }
   scrollBottom();
 }
@@ -1061,6 +1188,7 @@ function restart() {
   allSteps.forEach(hideStep);
   updateProgress();
   document.getElementById('chat-messages').scrollTop = 0;
+  if (parsedData) initGroupState(parsedData.meta);
 }
 
 function showAll() {
@@ -1099,6 +1227,8 @@ function seekProgress(e) {
   document.getElementById('play-btn').textContent = '▶';
   hideTyping();
 
+  // Reset group state so side-effects replay in order
+  initGroupState(parsedData.meta);
   allSteps.forEach((step, i) => {
     if (i < idx) revealStep(step);
     else hideStep(step);
