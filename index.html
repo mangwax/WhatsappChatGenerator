@@ -1132,15 +1132,7 @@ function scheduleNext() {
     timer = setTimeout(() => {
       hideTyping();
       curIdx++; updateProgress();
-      // Reveal the next message/system step instantly — no gap after typing ends
-      const nextStep = allSteps[curIdx];
-      if (nextStep && (nextStep.kind === 'msg' || nextStep.kind === 'sys')) {
-        revealStep(nextStep);
-        curIdx++; updateProgress();
-        timer = setTimeout(scheduleNext, nextStep.kind === 'msg' ? delay * 0.5 : delay * 0.35);
-      } else {
-        scheduleNext();
-      }
+      timer = setTimeout(scheduleNext, 1);
     }, Math.min(step.durationMs, MAX_TYPING_MS));
 
   } else if (step.kind === 'sys') {
