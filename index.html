@@ -206,6 +206,11 @@
     .prog-text { font-size: 10.5px; color: var(--muted); white-space: nowrap; }
     .spd-ctrl { display: flex; align-items: center; gap: 5px; font-size: 10.5px; color: var(--muted); }
     .spd-ctrl input[type=range] { width: 65px; accent-color: var(--accent); }
+    .spd-ctrl input[type=time] {
+      background: var(--border); border: none; color: var(--text);
+      border-radius: 4px; padding: 2px 4px; font-size: 10.5px; width: 68px;
+      accent-color: var(--accent);
+    }
 
     /* ── Phone container ─────────────────────────────────────────── */
     .phone-container {
@@ -562,6 +567,7 @@
         <code>[system] Alice pinned a message</code>&nbsp;
         <code>[system] Bob deleted a message</code>&nbsp;
         <code>[system] Dave changed the group icon</code>&nbsp;
+        <code>[system] Dave changed the group photo to ☀️</code>&nbsp;
         <code>[system] Alice changed the group subject to "Name"</code>&nbsp;
         <code>[system] Bob changed the group description to "..."</code>&nbsp;
         <code>[system] Charlie changed the group theme to red</code>&nbsp;(or&nbsp;<code>blue</code>)<br>
@@ -607,6 +613,10 @@
         <span>Speed</span>
         <input type="range" id="spd-slider" min="1" max="5" value="3" oninput="setSpeed(this.value)">
         <span id="spd-label">1×</span>
+      </div>
+      <div class="spd-ctrl">
+        <span>🕐</span>
+        <input type="time" id="phone-time" title="Phone status bar time (leave blank for live clock)" oninput="updateClock()">
       </div>
       <div class="ar-row">
         <button class="ar-btn active" id="ar-portrait"  onclick="setAspect('portrait')"  title="Portrait"  aria-label="Portrait mode">📱</button>
@@ -698,7 +708,7 @@ const SAMPLE = `# GROUP: Breaking News Commentators 🌍🔥
 [typing] Charlie (1.5s)
 [09:01] Charlie: someone file an HR complaint immediately
 > Bob:😂 Sarah:😂 Dave:💀 Emma:😂
-[system] Dave changed the group photo
+[system] Dave changed the group photo to ☀️
 [09:02] Dave: I changed it to a photo of the sun. felt right.
 [09:02] Sarah: >>Dave: I changed it to a photo of the sun. felt right. | peak group management ngl
 [09:02] Emma: 11/10 no notes
@@ -862,6 +872,10 @@ function parseSideEffect(text) {
   const descM = text.match(/changed the group description to (.+)$/i);
   if (descM) return { type: 'description', value: descM[1].trim().replace(/^["\u201C\u201D']|["\u201C\u201D']$/g, '') };
 
+  // Group photo/icon: "X changed the group photo to <emoji>" or "X changed the group icon to <emoji>"
+  const photoM = text.match(/changed the group (?:photo|icon) to (.+)$/i);
+  if (photoM) return { type: 'photo', value: photoM[1].trim() };
+
   // Member left: "X left"
   const leaveM = text.match(/^(.+) left$/i);
   if (leaveM) return { type: 'members_remove', member: leaveM[1].trim() };
@@ -922,6 +936,9 @@ function applySideEffect(effect) {
     case 'description':
       // Show description in the subtitle area directly
       document.getElementById('grp-members').textContent = effect.value;
+      break;
+    case 'photo':
+      document.getElementById('grp-avatar').textContent = effect.value;
       break;
     case 'theme':
       currentGroupState.theme = effect.color;
@@ -1283,6 +1300,11 @@ function showToast(msg) {
    LIVE CLOCK
 ================================================================ */
 function updateClock() {
+  const customTime = document.getElementById('phone-time').value;
+  if (customTime && /^\d{2}:\d{2}$/.test(customTime)) {
+    document.getElementById('clock').textContent = customTime;
+    return;
+  }
   const now = new Date();
   document.getElementById('clock').textContent =
     now.getHours().toString().padStart(2,'0') + ':' +
