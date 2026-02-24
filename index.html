@@ -1137,7 +1137,7 @@ function scheduleNext() {
       if (nextStep && (nextStep.kind === 'msg' || nextStep.kind === 'sys')) {
         revealStep(nextStep);
         curIdx++; updateProgress();
-        timer = setTimeout(scheduleNext, nextStep.kind === 'msg' ? delay * 0.2 : delay * 0.2);
+        timer = setTimeout(scheduleNext, nextStep.kind === 'msg' ? delay * 0.5 : delay * 0.35);
       } else {
         scheduleNext();
       }
