@@ -616,7 +616,7 @@
       </div>
       <div class="spd-ctrl">
         <span>🕐</span>
-        <input type="time" id="phone-time" title="Phone status bar time (leave blank for live clock)" oninput="updateClock()">
+        <input type="time" id="phone-time" title="Set start time for the chat — shifts message timestamps and the status bar clock" oninput="updateClock()">
       </div>
       <div class="ar-row">
         <button class="ar-btn active" id="ar-portrait"  onclick="setAspect('portrait')"  title="Portrait"  aria-label="Portrait mode">📱</button>
@@ -970,6 +970,21 @@ let curIdx     = 0;
 let playing    = false;
 let timer      = null;
 let speedVal   = 3;
+let prevWasTyping    = false;
+let chatTimeOffsetMins = 0;
+
+function timeStrToMins(t) {
+  const m = String(t).trim().match(/^(\d{1,2}):(\d{2})(?:\s*([AaPp][Mm]))?$/);
+  if (!m) return null;
+  let h = parseInt(m[1], 10), min = parseInt(m[2], 10);
+  if (m[3]) { const ap = m[3].toLowerCase(); if (ap === 'pm' && h !== 12) h += 12; else if (ap === 'am' && h === 12) h = 0; }
+  if (h < 0 || h > 23 || min < 0 || min > 59) return null;
+  return h * 60 + min;
+}
+function minsToTimeStr(mins) {
+  mins = ((mins % 1440) + 1440) % 1440;
+  return Math.floor(mins / 60).toString().padStart(2, '0') + ':' + (mins % 60).toString().padStart(2, '0');
+}
 
 // Curated per-event delays (ms) for slider positions 1–5 (slowest → fastest).
 // Labels shown: 0.5× 1× 1.5× 2× 3× — relative to the default position (3 = 1800 ms).
@@ -984,6 +999,18 @@ function generateChat() {
   const raw   = document.getElementById('chat-input').value;
   parsedData  = parseChat(raw);
   colorMap    = {}; colorIdx = 0;
+
+  // Compute time offset: shift message timestamps so the first message starts at the picked time
+  chatTimeOffsetMins = 0;
+  const pickerVal = document.getElementById('phone-time').value;
+  if (pickerVal && /^\d{1,2}:\d{2}$/.test(pickerVal)) {
+    const firstMsg = parsedData.items.find(x => x.type === 'message');
+    if (firstMsg) {
+      const firstMins = timeStrToMins(firstMsg.time);
+      const pickerMins = timeStrToMins(pickerVal);
+      if (firstMins !== null && pickerMins !== null) chatTimeOffsetMins = pickerMins - firstMins;
+    }
+  }
 
   // Initialise header + live group state
   initGroupState(parsedData.meta);
@@ -1066,7 +1093,10 @@ function buildMessageNode(item, me) {
 
   const time = document.createElement('span');
   time.className = 'msg-time';
-  time.innerHTML = item.time + (isMe ? ' <span class="tick">✓✓</span>' : '');
+  const displayTime = chatTimeOffsetMins !== 0
+    ? (timeStrToMins(item.time) !== null ? minsToTimeStr(timeStrToMins(item.time) + chatTimeOffsetMins) : item.time)
+    : item.time;
+  time.innerHTML = displayTime + (isMe ? ' <span class="tick">✓✓</span>' : '');
   bubble.appendChild(time);
   wrapper.appendChild(bubble);
 
@@ -1119,15 +1149,18 @@ function scheduleNext() {
   const delay = SPEED_MS[speedVal - 1];
 
   if (step.kind === 'msg') {
-    // Reveal message directly — typing dots only appear via explicit [typing] steps
+    // If the previous step was a typing indicator, reveal message immediately
+    const msgDelay = prevWasTyping ? 0 : delay * 0.5;
+    prevWasTyping = false;
     timer = setTimeout(() => {
       revealStep(step);
       curIdx++; updateProgress();
       timer = setTimeout(scheduleNext, delay * 0.5);
-    }, delay * 0.5);
+    }, msgDelay);
 
   } else if (step.kind === 'typing') {
     // Show typing indicator for the specified duration, then advance
+    prevWasTyping = true;
     showTyping(step.sender);
     timer = setTimeout(() => {
       hideTyping();
@@ -1136,6 +1169,7 @@ function scheduleNext() {
     }, Math.min(step.durationMs, MAX_TYPING_MS));
 
   } else if (step.kind === 'sys') {
+    prevWasTyping = false;
     // System messages appear with a shorter pause
     timer = setTimeout(() => {
       revealStep(step);
@@ -1144,6 +1178,7 @@ function scheduleNext() {
     }, delay * 0.35);
 
   } else if (step.kind === 'reaction') {
+    prevWasTyping = false;
     // Reactions pop in quickly one by one — no typing indicator
     const reactDelay = Math.max(350, delay * 0.18);
     timer = setTimeout(() => {
@@ -1197,6 +1232,7 @@ function restart() {
   clearTimeout(timer);
   playing = false;
   curIdx  = 0;
+  prevWasTyping = false;
   document.getElementById('play-btn').textContent = '▶';
   hideTyping();
   allSteps.forEach(hideStep);
@@ -1238,6 +1274,7 @@ function seekProgress(e) {
 
   clearTimeout(timer);
   playing = false;
+  prevWasTyping = false;
   document.getElementById('play-btn').textContent = '▶';
   hideTyping();
 
