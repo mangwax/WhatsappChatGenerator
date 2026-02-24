@@ -1137,7 +1137,7 @@ function scheduleNext() {
       if (nextStep && (nextStep.kind === 'msg' || nextStep.kind === 'sys')) {
         revealStep(nextStep);
         curIdx++; updateProgress();
-        timer = setTimeout(scheduleNext, nextStep.kind === 'msg' ? delay * 0.5 : delay * 0.35);
+        timer = setTimeout(scheduleNext, nextStep.kind === 'msg' ? delay * 0.1 : delay * 0.05);
       } else {
         scheduleNext();
       }
@@ -1148,17 +1148,17 @@ function scheduleNext() {
     timer = setTimeout(() => {
       revealStep(step);
       curIdx++; updateProgress();
-      timer = setTimeout(scheduleNext, delay * 0.35);
-    }, delay * 0.35);
+      timer = setTimeout(scheduleNext, delay * 0.05);
+    }, delay * 0.05);
 
   } else if (step.kind === 'reaction') {
     // Reactions pop in quickly one by one — no typing indicator
-    const reactDelay = Math.max(350, delay * 0.18);
+    const reactDelay = Math.max(350, delay * 0.05);
     timer = setTimeout(() => {
       revealStep(step);
       curIdx++; updateProgress();
-      timer = setTimeout(scheduleNext, reactDelay * 0.6);
-    }, reactDelay * 0.4);
+      timer = setTimeout(scheduleNext, reactDelay * 0.1);
+    }, reactDelay * 0.1);
   }
 }
 
