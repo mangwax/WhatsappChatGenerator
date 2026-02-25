@@ -462,28 +462,24 @@
       --accent:      #e53935;
       --accent-h:    #c62828;
       --tick:        #ef9a9a;
-      --chat-bg:     #721c1a;
     }
     body.light.theme-red {
       --wa-hdr:      #e53935;
       --accent:      #c62828;
       --accent-h:    #b71c1c;
       --txt-bubble:  #111b21;
-      --chat-bg:     #721c1a;
     }
     body.theme-blue {
       --wa-hdr:      #1565c0;
       --accent:      #1976d2;
       --accent-h:    #1565c0;
       --tick:        #90caf9;
-      --chat-bg:     #0c3b69;
     }
     body.light.theme-blue {
       --wa-hdr:      #1976d2;
       --accent:      #1565c0;
       --accent-h:    #0d47a1;
       --txt-bubble:  #111b21;
-      --chat-bg:     #0c3b69;
     }
 
     /* ── Reply quote inside bubble ──────────────────────────────── */
@@ -904,6 +900,16 @@ function memberColor(name) {
   return colorMap[name];
 }
 
+function halfShadeColor(colorName) {
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = 1;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = colorName;
+  ctx.fillRect(0, 0, 1, 1);
+  const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
+  return `rgb(${Math.floor(r/2)},${Math.floor(g/2)},${Math.floor(b/2)})`;
+}
+
 /* ================================================================
    GROUP STATE  — tracks live header changes during playback
 ================================================================ */
@@ -923,7 +929,12 @@ function applyGroupState() {
       ? currentGroupState.members.join(', ')
       : 'tap to see members';
   document.body.classList.remove('theme-red', 'theme-blue');
-  if (currentGroupState.theme) document.body.classList.add('theme-' + currentGroupState.theme);
+  if (currentGroupState.theme) {
+    document.body.classList.add('theme-' + currentGroupState.theme);
+    document.body.style.setProperty('--chat-bg', halfShadeColor(currentGroupState.theme));
+  } else {
+    document.body.style.removeProperty('--chat-bg');
+  }
 }
 
 function applySideEffect(effect) {
