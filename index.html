@@ -901,12 +901,19 @@ function memberColor(name) {
 }
 
 function halfShadeColor(colorName) {
+  // Resolve any CSS color name to its rgb components by reading fillStyle back
+  // (no getImageData security restrictions needed)
   const canvas = document.createElement('canvas');
   canvas.width = canvas.height = 1;
   const ctx = canvas.getContext('2d');
-  ctx.fillStyle = colorName;
-  ctx.fillRect(0, 0, 1, 1);
-  const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
+  ctx.fillStyle = '#000';      // start with a known value
+  ctx.fillStyle = colorName;   // set desired color
+  const resolved = ctx.fillStyle; // browser normalises to 'rgb(r, g, b)' or '#rrggbb'
+  let r = 0, g = 0, b = 0;
+  const rgb = resolved.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+  const hex = resolved.match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+  if (rgb) { r = +rgb[1]; g = +rgb[2]; b = +rgb[3]; }
+  else if (hex) { r = parseInt(hex[1],16); g = parseInt(hex[2],16); b = parseInt(hex[3],16); }
   return `rgb(${Math.floor(r/2)},${Math.floor(g/2)},${Math.floor(b/2)})`;
 }
 
@@ -929,11 +936,15 @@ function applyGroupState() {
       ? currentGroupState.members.join(', ')
       : 'tap to see members';
   document.body.classList.remove('theme-red', 'theme-blue');
+  const chatEl = document.getElementById('chat-messages');
   if (currentGroupState.theme) {
     document.body.classList.add('theme-' + currentGroupState.theme);
-    document.body.style.setProperty('--chat-bg', halfShadeColor(currentGroupState.theme));
+    const shade = halfShadeColor(currentGroupState.theme);
+    document.body.style.setProperty('--chat-bg', shade);
+    chatEl.style.backgroundColor = shade;
   } else {
     document.body.style.removeProperty('--chat-bg');
+    chatEl.style.backgroundColor = '';
   }
 }
 
